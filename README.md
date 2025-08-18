@@ -90,6 +90,8 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | downsample_factor | By what factor should xcavate downsample the interpolated network? | 1 (no downsampling) |
 | flow | Volumetric flow rate of the ink through the syringe (mm^3/s) | 0.127 |
 | topPadding | Amount of padding (mm) to add above maximum z-coordinate in network | 0 |
+| dwellStart | Duration of time (s) to dwell at start of print segment | 0.08 |
+| dwellEnd | Duration of time (s) to dwell at end of print segment | 0.08|
 
 # Local Code Setup
 
