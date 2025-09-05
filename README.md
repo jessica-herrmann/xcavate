@@ -25,7 +25,7 @@ These files are contained within the "inputs/custom" folder, and must be updated
 | stop_extrusion_printhead1.txt | Custom g-code for stopping extrusion of printhead 1 (multimaterial) |
 | dwell_start.txt | Custom g-code for dwelling at the start of a print pass |
 | dwell_end.txt | Custom g-code for dwelling at the end of a print pass |
-|active_pressure_printhead1.txt | Custom g-code for setting the pressure for extrusion when printhead 1 is the active nozzle |
+| active_pressure_printhead1.txt | Custom g-code for setting the pressure for extrusion when printhead 1 is the active nozzle |
 | active_pressure_printhead1.txt | Custom g-code for setting the pressure for extrusion when printhead 2 is the active nozzle |
 | rest_pressure_printhead1.txt | Custom g-code for setting the resting pressure for extrusion when printhead 1 is the resting nozzle |
 | rest_pressure_printhead2.txt | Custom g-code for setting the resting pressure for extrusion when printhead 2 is the resting nozzle |
