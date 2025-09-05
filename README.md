@@ -6,6 +6,31 @@ X-CAVATE accepts an input list of coordinates (in cm) specifying the b-splines c
 
 # Getting Started
 
+## Input Files
+
+### Custom Files
+
+X-CAVATE contains multiple input file types to assist with integration into the user's specific printer hardware and software.
+
+These files are contained within the "inputs/custom" folder, and must be updated with the user's specific code prior to running x-cavate.
+
+| File | Description |
+| ----------- | ----------- |
+| header_code.txt | Custom g-code for header |
+| start_extrusion_code.txt | Custom g-code for starting extrusion (single material) |
+| stop_extrusion_code.txt | Custom g-code for stopping extrusion (single material) |
+| start_extrusion_printhead1.txt | Custom g-code for starting extrusion of printhead 1 (multimaterial) |
+| start_extrusion_axis1.txt | Custom g-code for starting extrusion of axis 1 (multimaterial) |
+| stop_extrusion_printhead1.txt | Custom g-code for stopping extrusion of printhead 1 (multimaterial) |
+| stop_extrusion_printhead1.txt | Custom g-code for stopping extrusion of printhead 1 (multimaterial) |
+| dwell_start.txt | Custom g-code for dwelling at the start of a print pass |
+| dwell_end.txt | Custom g-code for dwelling at the end of a print pass |
+|active_pressure_printhead1.txt | Custom g-code for setting the pressure for extrusion when printhead 1 is the active nozzle |
+| active_pressure_printhead1.txt | Custom g-code for setting the pressure for extrusion when printhead 2 is the active nozzle |
+| rest_pressure_printhead1.txt | Custom g-code for setting the resting pressure for extrusion when printhead 1 is the resting nozzle |
+| rest_pressure_printhead2.txt | Custom g-code for setting the resting pressure for extrusion when printhead 2 is the resting nozzle |
+
+
 
 ## Required Format
 
@@ -39,6 +64,19 @@ Nordson provides a list of nozzle dimensions here: https://www.nordson.com/en/pr
 To generate g-code for a network which distinguishes between arterial and venous vessels, turn on the "multimaterial" option by specifying "1" for the --multimaterial option in the command line. To turn off the multimaterial feature, specify "0" in the command line.
 
 # Optional Parameters
+
+## Gap Closure
+
+X-CAVATE has two features for optimizing closure of gaps which may emerge at print pass junctions:
+
+**1. Nodal Overlap**
+Using the `--numOverlap` feature, users can optionally specify a number of nodes by which to overlap the end of a print pass with the previously-printed pass to which it connects.
+
+**2. Segment Extension**
+Using the `pass_to_extend` .txt file, users can specify which print passes to extend. Using the `deltas_to_extend` .txt file, users can specify the distance, in mm, by which to extend the _x_-, _y_-, and _z_-coordinates. The `_SM` extension is the file for extending single material passes, and the `_MM` extension is for multimaterial.
+
+<img width="555" height="77" alt="image" src="https://github.com/user-attachments/assets/00b3502b-892d-4684-8624-e76d3d15a8b2" />
+
 
 ## Tolerancing
 
