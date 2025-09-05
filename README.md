@@ -135,6 +135,10 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | topPadding | Amount of padding (mm) to add above maximum z-coordinate in network | 0 |
 | dwellStart | Duration of time (s) to dwell at start of print segment | 0.08 |
 | dwellEnd | Duration of time (s) to dwell at end of print segment | 0.08|
+| printhead1 | Name of the printhead holding the arterial ink | Aa |
+| printhead2 | Name of the printhead holding the venous ink | Ab |
+| printhead1axis | Name of the printer axis (z-axis) holding the arterial ink | A |
+| printhead2axis | Name of the printer axis (z-axis) holding the venous ink | B |
 
 # Local Code Setup
 
