@@ -63,6 +63,10 @@ Nordson provides a list of nozzle dimensions here: https://www.nordson.com/en/pr
 
 To generate g-code for a network which distinguishes between arterial and venous vessels, turn on the "multimaterial" option by specifying "1" for the --multimaterial option in the command line. To turn off the multimaterial feature, specify "0" in the command line.
 
+## Custom G-code
+
+Users must specify at the command line whether they are including custom g-code for adaptation to their own printer hardware/software.
+
 # Optional Parameters
 
 ## Gap Closure
@@ -70,7 +74,7 @@ To generate g-code for a network which distinguishes between arterial and venous
 X-CAVATE has two features for optimizing closure of gaps which may emerge at print pass junctions:
 
 **1. Nodal Overlap**
-Using the `--numOverlap` feature, users can optionally specify a number of nodes by which to overlap the end of a print pass with the previously-printed pass to which it connects.
+Using the `--numOverlap` feature, users can optionally specify a number of nodes by which to overlap the end of a print pass with the previously-printed pass to which it connects. If there are fewer than the specified number of nodes in the existing pass, x-cavate will retrace the entire existing pass.
 
 **2. Segment Extension**
 Using the `pass_to_extend` .txt file, users can specify which print passes to extend. Using the `deltas_to_extend` .txt file, users can specify the distance, in mm, by which to extend the _x_-, _y_-, and _z_-coordinates. The `_SM` extension is the file for extending single material passes, and the `_MM` extension is for multimaterial.
@@ -113,6 +117,7 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | speed_calc | Compute print speeds for changing radii? | 1=Yes, 0=No |
 | plots | Generate plots of network print paths? | 1=Yes, 0=No |
 | downsample | Downsample interpolated network? | 1=Yes, 0=No | 
+| customG | Including custom g-code? | 1=Yes, 0=No |
 
 
 <br>
@@ -143,6 +148,4 @@ Ensure Python 3 is installed locally before running xcavate.py.
 
 The following is an example prompt to run at the command line, with sample parameter values specified:
 
-python xcavate.py --network_file inputs/VesselNetwork.txt --inletoutlet_file inputs/InletsOutlets.txt --multimaterial 1 --tolerance 0 --nozzleOD 0.65 --numDecimalsOutput 5 --tolerance_flag 0 --speed_calc 1 --plots 1 --downsample 0 --flow 0.127
-
-
+`python xcavate.py --network_file inputs/VesselNetwork.txt --inletoutlet_file inputs/InletsOutlets.txt --multimaterial 1 --tolerance 0 --nozzleOD 0.65 --numDecimalsOutput 5 --container_height 50 --tolerance_flag 0 --speed_calc 1 --plots 1 --downsample 0 --flow 0.127 --customG 1`
