@@ -17,14 +17,12 @@ These files are contained within the "inputs/custom" folder, and must be updated
 | File | Description |
 | ----------- | ----------- |
 | header_code.txt | Custom g-code for header |
-| start_extrusion_code.txt | Custom g-code for starting extrusion (single material) |
-| stop_extrusion_code.txt | Custom g-code for stopping extrusion (single material) |
-| start_extrusion_printhead1.txt | Custom g-code for starting extrusion of printhead 1 (multimaterial) |
-| start_extrusion_axis1.txt | Custom g-code for starting extrusion of axis 1 (multimaterial) |
-| stop_extrusion_printhead1.txt | Custom g-code for stopping extrusion of printhead 1 (multimaterial) |
-| stop_extrusion_printhead1.txt | Custom g-code for stopping extrusion of printhead 1 (multimaterial) |
-| dwell_start.txt | Custom g-code for dwelling at the start of a print pass |
-| dwell_end.txt | Custom g-code for dwelling at the end of a print pass |
+| start_extrusion_code.txt | Custom g-code for starting extrusion and dwelling (single material) |
+| stop_extrusion_code.txt | Custom g-code for stopping extrusion and dwelling (single material) |
+| start_extrusion_printhead1.txt | Custom g-code for starting extrusion of printhead 1 and dwelling (multimaterial) |
+| start_extrusion_axis1.txt | Custom g-code for starting extrusion of axis 1 and dwelling (multimaterial) |
+| stop_extrusion_printhead1.txt | Custom g-code for stopping extrusion of printhead 1 and dwelling (multimaterial) |
+| stop_extrusion_printhead1.txt | Custom g-code for stopping extrusion of printhead 1 and dwelling (multimaterial) |
 | active_pressure_printhead1.txt | Custom g-code for setting the pressure for extrusion when printhead 1 is the active nozzle |
 | active_pressure_printhead1.txt | Custom g-code for setting the pressure for extrusion when printhead 2 is the active nozzle |
 | rest_pressure_printhead1.txt | Custom g-code for setting the resting pressure for extrusion when printhead 1 is the resting nozzle |
@@ -112,12 +110,13 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | inletoutlet_file | Path to .txt file containing inlet and outlet coordinates | |
 | multimaterial | Two inks (arterial, venous) | 1=Yes, 0=No | 
 | tolerance_flag | Include tolerance? | 1=Yes, 0=No |
-| nozzleOD | Nozzle outer diameter (mm) |  |
-| numDecimalsOutput | Number of decimals places for rounding output values | |
+| nozzle_diameter | Nozzle outer diameter (mm) |  |
+| container_height | Height of the print container (mm) | |
+| num_decimals | Number of decimals places for rounding output values | |
 | speed_calc | Compute print speeds for changing radii? | 1=Yes, 0=No |
 | plots | Generate plots of network print paths? | 1=Yes, 0=No |
 | downsample | Downsample interpolated network? | 1=Yes, 0=No | 
-| customG | Including custom g-code? | 1=Yes, 0=No |
+| custom | Including custom g-code? | 1=Yes, 0=No |
 
 
 <br>
@@ -128,17 +127,16 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | tolerance   | Amount of tolerance (mm) | 0 | 
 | container_x | Dimensions of print container in x (mm) | 50 |
 | container_y | Dimensions of print container in y (mm) | 50 |
-| container_z | Dimensions of print container in z (mm) | 50 |
-| scaleFactor | Multiple by which to scale the size of the input network | 1 (matches input, i.e. not scaled) |
+| scale_factor | Multiple by which to scale the size of the input network | 1 (matches input, i.e. not scaled) |
 | downsample_factor | By what factor should xcavate downsample the interpolated network? | 1 (no downsampling) |
 | flow | Volumetric flow rate of the ink through the syringe (mm^3/s) | 0.127 |
-| topPadding | Amount of padding (mm) to add above maximum z-coordinate in network | 0 |
-| dwellStart | Duration of time (s) to dwell at start of print segment | 0.08 |
-| dwellEnd | Duration of time (s) to dwell at end of print segment | 0.08|
-| printhead1 | Name of the printhead holding the arterial ink | Aa |
-| printhead2 | Name of the printhead holding the venous ink | Ab |
-| printhead1axis | Name of the printer axis (z-axis) holding the arterial ink | A |
-| printhead2axis | Name of the printer axis (z-axis) holding the venous ink | B |
+| top_padding | Amount of padding (mm) to add above maximum z-coordinate in network | 0 |
+| dwell_start | Duration of time (s) to dwell at start of print segment | 0.08 |
+| dwell_end | Duration of time (s) to dwell at end of print segment | 0.08|
+| printhead_1 | Name of the printhead holding the arterial ink | Aa |
+| printhead_2 | Name of the printhead holding the venous ink | Ab |
+| axis_1 | Name of the printer axis (z-axis) holding the arterial ink | A |
+| axis_2 | Name of the printer axis (z-axis) holding the venous ink | B |
 
 # Local Code Setup
 
