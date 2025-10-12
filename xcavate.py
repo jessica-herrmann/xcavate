@@ -49,6 +49,10 @@ parser.add_argument('--container_height', help='Height of print container (mm)',
 parser.add_argument('--resting_pressure', help='Extrusion pressure for non-active nozzle during multimaterial (psi)', type=float, required=False, default=10)
 parser.add_argument('--active_pressure', help='Extrusion pressure for active nozzle during multimaterial (psi)', type=float, required=False, default=5)
 parser.add_argument('--print_speed', help='Print speed (feed rate) for constant radii (mm/s)', type=float, required=False, default=1)
+parser.add_argument('--jog_speed', help='Custom jog speed (mm/s)', type=float, required=False, default=5)
+parser.add_argument('--jog_speed_lift', help='Custom +z jog speed for initial nozzle lift (mm/s)', type=float, required=False, default=0.25)
+parser.add_argument('--initial_lift', help='Distance over which to use reduced jog speed when lifting nozzle (mm)', type=float, required=False, default=0.5)
+parser.add_argument('--jog_translation', help='Jog speed for translating between nozzles in multimaterial (mm/s)', type=float, required=False, default=10)
 # Offset variables (for multimaterial printing)
 parser.add_argument('--offset_x', help='Distance between the printhead nozzles in x, i.e. x-offset (mm)', type=float, required=False, default=103)
 parser.add_argument('--offset_y', help='Distance between the printhead nozzles in y, i.e. y-offset (mm)', type=float, required=False, default=0.5)
@@ -68,17 +72,12 @@ parser.add_argument('--custom', help='Providing custom G-code? 1=Yes, 0=No', typ
 # Extrusion vs pressure-based custom printer
 parser.add_argument('--printer_type', help='Type of custom printer? 1=Extrusion-based, 0=Pressure-based', required=False, default=0)
 # Extrusion parameters
-parser.add_argument('--extrusion_jog', help='Custom jog speed (mm/s)', type=float, required=False, default=5)
-parser.add_argument('--extrusion_jogz', help='Custom +z jog speed (mm/s)', type=float, required=False, default=0.25)
-parser.add_argument('--extrusion_start', help='Custom extrusion start value if extrusion printing is being used (mm)', type=float, required=False, default=0)
-parser.add_argument('--extrusion_end', help='Custom extrusion stop value (mm) if extrusion printing is being used', type=float, required=False, default=0)
-parser.add_argument('--extrusion_diam', help='Custom line diameter (mm) if extrusion printing is being used and if ignoring vessel diameters', type=float, required=False, default=1)
-parser.add_argument('--extrusion_syringe_diam', help='Custom syringe diameter (mm) if extrusion printing is being used', type=float, required=False, default=1)
-parser.add_argument('--extrusion_factor', help='Custom extrusion value multiplier if extrusion printing is being used', type=float, required=False, default=1)
-parser.add_argument('--extrusion_radii', help='Use vessel radii for extrusion calculations? 1 = yes, 0 = no', type=int, required=False, default=0)
-
-parser.add_argument('--initial_lift', help='Distance over which to use reduced jog speed when lifting nozzle (mm)', type=float, required=False, default=0.5)
-parser.add_argument('--jog_translation', help='Jog speed for translating between nozzles in multimaterial (mm/s)', type=float, required=False, default=10)
+parser.add_argument('--extrusion_start', help='Extrusion start value for extursion printing (mm)', type=float, required=False, default=0)
+parser.add_argument('--extrusion_end', help='Extrusion stop value (mm) for extrusion printing (mm)', type=float, required=False, default=0)
+parser.add_argument('--extrusion_radii', help='Use vessel radii for extrusion calculations? 1 = Yes, 0 = No', type=int, required=False, default=0)
+parser.add_argument('--extrusion_diam', help='Vessel diameter (mm) for extrusion printing (not using SimVascular radii)', type=float, required=False, default=1)
+parser.add_argument('--extrusion_syringe_diam', help='Syringe diameter (mm) for extrusion printing', type=float, required=False, default=1)
+parser.add_argument('--extrusion_factor', help='Extrusion value multiplier for extrusion printing', type=float, required=False, default=1)
 
 
 args = parser.parse_args()
@@ -116,8 +115,8 @@ custom_gcode = args.custom
 print_speed = args.print_speed
 printer_type = args.printer_type
 
-customJogSpeed = args.extrusion_jog
-customZJogSpeed = args.extrusion_jogz
+customJogSpeed = args.jog_speed
+customZJogSpeed = args.jog_speed_lift
 customExtrusionStartValue = args.extrusion_start
 customExtrusionStopValue = args.extrusion_end
 customExtrusionLineDiameter = args.extrusion_diam
