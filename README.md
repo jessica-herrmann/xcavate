@@ -147,12 +147,24 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | num_overlap | Number of nodes by which to overlap segments (for gap closure) | 0 |
 | close_sm | Providing an additional gap closure file (single material)? 1=Yes, 0=No | 0 |
 | close_mm | Providing an additional gap closure file (multimaterial)? 1=Yes, 0=No | 0 |
+| printer_type | Type of custom printer? 1=Extrusion-based, 0=Pressure-based | 0 |
+| jog_speed | Jog speed (mm/s) | 5 |
+| jog_translation | Jog speed for translating between nozzles in multimaterial mode (mm/s) | 10 |
+| jog_speed_lift | Jog speed for initial nozzle lift (mm/s) | 0.25 |
+| initial_lift | Distance over which to use jog_speed_lift when lifting nozzle (mm) | 0.5 |
+| extrusion_start | Extrusion start value for extrusion printing (mm) | 0 |
+| extrusion_end | Extrusion end value for extrusion printing (mm) | 0 |
+| extrusion_radii | Use vessel radii for extrusion calculations? 1=Yes, 0=No | 0 |
+| extrusion_diam | Vessel diameter (mm) for extrusion printing (not using SimVascular radii) | 1 |
+| extrusion_syringe_diam | Syringe diameter (mm) for extrusion printing | 1 |
+| extrusion_factor | Extrusion value multiplier for extrusion printing | 1 |
+
 
 # Local Code Setup
 
 The input network coordinates should be listed in terms of centimeters. X-CAVATE will internally convert the centimeters to millimeters.
 
-Before running the code, create two new folders within the same folder containing xcavate.py: one folder labeled "input," which should contain the two network .txt files, and an empty folder labled "output."
+Before running the code, create two new folders within the same folder containing xcavate.py: one folder labeled "inputs," which should contain the two network .txt files, and an empty folder labled "outputs."
 
 Ensure Python 3 is installed locally before running xcavate.py.
 
