@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Jessica Herrmann, Skylar-Scott Lab, June 2023
+# Jessica Herrmann, Skylar-Scott Lab, Oct 2025
 
 ############################################################### Import: Dependencies ######################################################################
 
@@ -32,36 +32,128 @@ parser.add_argument('--inletoutlet_file', help='Path to .txt file containing inl
 parser.add_argument('--multimaterial', help='Multimaterial? (1=yes, 0=no)', type=int, required=True)
 parser.add_argument('--tolerance_flag', help='Include tolerance? (1=yes, 0=no)', type=float, required=True, default=0)
 parser.add_argument('--tolerance', help='Specify amount of tolerance (0 is none)', type=float, required=False, default=0)
-parser.add_argument('--nozzleOD', help='Outer diameter of nozzle (mm)', type=float, required=True)
+parser.add_argument('--nozzle_diameter', help='Outer diameter of nozzle (mm)', type=float, required=True)
 parser.add_argument('--container_x', help='Dimensions of container in x (mm)', type=float, required=False, default=50)
 parser.add_argument('--container_y', help='Dimensions of container in y (mm)', type=float, required=False, default=50)
-parser.add_argument('--container_z', help='Dimensions of container in z (mm)', type=float, required=False, default=50)
-parser.add_argument('--numDecimalsOutput', help='number of decimals places for rounding output values', type=int, required=True)
+parser.add_argument('--num_decimals', help='number of decimals places for rounding output values', type=int, required=True)
 parser.add_argument('--speed_calc', help='Compute print speeds for changing radii? (1=yes, 0=no)', type=int, required=True)
 parser.add_argument('--plots', help='Generate plots? (1=yes, 0=no)', type=int, required=True)
 parser.add_argument('--downsample', help='Downsample network at end? (1=yes, 0=no)', type=int, required=True)
 parser.add_argument('--downsample_factor', help='By what factor should xcavate downsample?', type=int, required=False, default=1)
 parser.add_argument('--flow', help='volumetric flow rate of the ink (mm^3/s), experimentally determined', type=float, required=False, default = 0.1272265034574846)
-parser.add_argument('--scaleFactor', help='Factor by which to scale the network', type=float, required=False, default=1)
-parser.add_argument('--topPadding', help='Amount of space to leave above network (mm)', type=float, required=False, default=0)
+parser.add_argument('--scale_factor', help='Factor by which to scale the network', type=float, required=False, default=1)
+parser.add_argument('--top_padding', help='Amount of space to leave above network (mm)', type=float, required=False, default=0)
+parser.add_argument('--dwell_start', help='Time to dwell at start of vessel segment (s)', type=float, required=False, default=0.08)
+parser.add_argument('--dwell_end', help='Time to dwell at end of vessel segment (s)', type=float, required=False, default=0.08)
+parser.add_argument('--container_height', help='Height of print container (mm)', type=float, required=True)
+parser.add_argument('--resting_pressure', help='Extrusion pressure for non-active nozzle during multimaterial (psi)', type=float, required=False, default=10)
+parser.add_argument('--active_pressure', help='Extrusion pressure for active nozzle during multimaterial (psi)', type=float, required=False, default=5)
+parser.add_argument('--print_speed', help='Print speed (feed rate) for constant radii (mm/s)', type=float, required=False, default=1)
+# Offset variables (for multimaterial printing)
+parser.add_argument('--offset_x', help='Distance between the printhead nozzles in x, i.e. x-offset (mm)', type=float, required=False, default=103)
+parser.add_argument('--offset_y', help='Distance between the printhead nozzles in y, i.e. y-offset (mm)', type=float, required=False, default=0.5)
+parser.add_argument('--front_nozzle', help='1 if venous nozzle (right printhead) is in front of arterial (left printhead), 2 if behind', type=int, required=False, default=1)
+parser.add_argument('--amount_up', help='Amount to raise nozzles in z-direction before switching between active/inactive nozzles (mm)', type=float, required=False, default=10)
+# Custom printer axes
+parser.add_argument('--printhead_1', help='Name of the printhead holding the arterial ink', type=str, required=False, default='Aa')
+parser.add_argument('--printhead_2', help='Name of the printhead holding the venous ink', type=str, required=False, default='Ab')
+parser.add_argument('--axis_1', help='Name of the printer axis (z-axis) holding the arterial ink', type=str, required=False, default='A')
+parser.add_argument('--axis_2', help='Name of the printer axis (z-axis) holding the venous ink', type=str, required=False, default='B')
+parser.add_argument('--num_overlap', help='Number of nodes by which to overlap segments (for gap closure)', type=int, required=False, default=0)
+# Custom nodal closure
+parser.add_argument('--close_sm', help="Providing an additional gap closure file (single material)? 1 = Yes, 0 = No", type=int, required=False, default=0)
+parser.add_argument('--close_mm', help="Providing an additional gap closure file (multimaterial)? 1 = Yes, 0 = No", type=int, required=False, default=0)
+# Custom gcode files
+parser.add_argument('--custom', help='Providing custom G-code? 1=Yes, 0=No', type=int, required=True)
+# Extrusion vs pressure-based custom printer
+parser.add_argument('--printer_type', help='Type of custom printer? 1=Extrusion-based, 0=Pressure-based', required=False, default=0)
+# Extrusion parameters
+parser.add_argument('--extrusion_jog', help='Custom jog speed (mm/s)', type=float, required=False, default=5)
+parser.add_argument('--extrusion_jogz', help='Custom +z jog speed (mm/s)', type=float, required=False, default=0.25)
+parser.add_argument('--extrusion_start', help='Custom extrusion start value if extrusion printing is being used (mm)', type=float, required=False, default=0)
+parser.add_argument('--extrusion_end', help='Custom extrusion stop value (mm) if extrusion printing is being used', type=float, required=False, default=0)
+parser.add_argument('--extrusion_diam', help='Custom line diameter (mm) if extrusion printing is being used and if ignoring vessel diameters', type=float, required=False, default=1)
+parser.add_argument('--extrusion_syringe_diam', help='Custom syringe diameter (mm) if extrusion printing is being used', type=float, required=False, default=1)
+parser.add_argument('--extrusion_factor', help='Custom extrusion value multiplier if extrusion printing is being used', type=float, required=False, default=1)
+parser.add_argument('--extrusion_radii', help='Use vessel radii for extrusion calculations? 1 = yes, 0 = no', type=int, required=False, default=0)
+
+parser.add_argument('--initial_lift', help='Distance over which to use reduced jog speed when lifting nozzle (mm)', type=float, required=False, default=0.5)
+parser.add_argument('--jog_translation', help='Jog speed for translating between nozzles in multimaterial (mm/s)', type=float, required=False, default=10)
+
 
 args = parser.parse_args()
 
 multimaterial = args.multimaterial
 tolerance = args.tolerance
 tolerance_flag = args.tolerance_flag
-nozzle_OD = args.nozzleOD
-scaleFactor = args.scaleFactor
-topPadding = args.topPadding
-numDecimalsOutput = args.numDecimalsOutput
+nozzle_OD = args.nozzle_diameter
+scaleFactor = args.scale_factor
+topPadding = args.top_padding
+numDecimalsOutput = args.num_decimals
 flow = args.flow
 speed_calc = args.speed_calc
 plots = args.plots
 container_x = args.container_x
 container_y = args.container_y
-container_z = args.container_z
 downsample = args.downsample
 downsample_factor = args.downsample_factor
+dwell_start = args.dwell_start
+dwell_end = args.dwell_end 
+containerHeight = args.container_height
+resting_pressure = args.resting_pressure
+active_pressure = args.active_pressure
+dist_between_printheads = args.offset_x
+ydist_between_printheads = args.offset_y
+amount_up = args.amount_up
+printhead_1 = args.printhead_1
+printhead_2 = args.printhead_2
+printhead1_axis = args.axis_1
+printhead2_axis = args.axis_2
+num_overlap = args.num_overlap
+close_var_SM = args.close_sm
+close_var_MM = args.close_mm
+custom_gcode = args.custom
+print_speed = args.print_speed
+printer_type = args.printer_type
+
+customJogSpeed = args.extrusion_jog
+customZJogSpeed = args.extrusion_jogz
+customExtrusionStartValue = args.extrusion_start
+customExtrusionStopValue = args.extrusion_end
+customExtrusionLineDiameter = args.extrusion_diam
+customExtrusionSyringeDiameter = args.extrusion_syringe_diam
+customExtrusionFactor = args.extrusion_factor
+useRadiiExtrusion = args.extrusion_radii
+initial_lift = args.initial_lift
+customJogSpeedTranslation = args.jog_translation
+
+gap_file_SM = "inputs/pass_to_extend_SM.txt"
+deltas_file_SM = "inputs/deltas_to_extend_SM.txt"
+gap_file_MM = "inputs/pass_to_extend_MM.txt"
+deltas_file_MM = "inputs/deltas_to_extend_MM.txt"
+
+gap_file_SM = "inputs/extension/pass_to_extend_SM.txt"
+gap_file_MM = "inputs/extension/pass_to_extend_MM.txt"
+deltas_file_SM = "inputs/extension/deltas_to_extend_SM.txt"
+deltas_file_MM = "inputs/extension/deltas_to_extend_MM.txt"
+
+headerCode = "inputs/custom/header_code.txt"
+startExtrusionCode = "inputs/custom/start_extrusion_code.txt"
+stopExtrusionCode = "inputs/custom/stop_extrusion_code.txt"
+
+stopExtrusionCode_printhead2 = "inputs/custom/stop_extrusion_code_printhead2.txt"
+stopExtrusionCode_printhead1 = "inputs/custom/stop_extrusion_code_printhead1.txt"
+startExtrusionCode_printhead2 = "inputs/custom/start_extrusion_code_printhead2.txt"
+startExtrusionCode_printhead1 = "inputs/custom/start_extrusion_code_printhead1.txt"
+active_pressure_printhead1 = "inputs/custom/active_pressure_printhead1.txt"
+active_pressure_printhead2 = "inputs/custom/active_pressure_printhead2.txt"
+rest_pressure_printhead1 = "inputs/custom/rest_pressure_printhead1.txt"
+rest_pressure_printhead2 = "inputs/custom/rest_pressure_printhead2.txt"
+
+
+dwell_printhead1 = "inputs/custom/dwell_code.txt"
+dwell_printhead2 = "inputs/custom/dwell_code.txt"
+
 
 ###################################################################### Preprocessing ######################################################################
 
@@ -1778,7 +1870,7 @@ for i in append_first_branch:
 for i in append_last_branch:
   print_passes_processed[i].append(append_last_branch[i])
   with open('changelog.txt', 'a') as f:
-    f.write(f'\nAppending node {append_first_branch[i]} to end of pass {i}.')
+    f.write(f'\nAppending node {append_last_branch[i]} to end of pass {i}.')
   f.close()
 
 # Print output
@@ -2124,7 +2216,7 @@ for i in print_passes_processed:
 # Update print_passes_processed (BRANCHPOINT CONDITION #2)
 for i in append_first_branch:
   print_passes_processed[i].insert(0,append_first_branch[i]) 
-  with open('changelog.txt,' 'a') as f:
+  with open('changelog.txt', 'a') as f:
     f.write(f'\nAppending node {append_first_branch[i]} to start of pass {i}.')
   f.close()
 for i in append_last_branch:
@@ -2690,7 +2782,6 @@ f.close()
 
 ######################################################## Final Gap Closure ###########################################################
 
-print('\nNow running Final Gap Closure.')
 
 with open('changelog.txt', 'a') as f:
   f.write('\n\nNow running Final Gap Closure.\n')
@@ -3028,18 +3119,27 @@ with open('changelog.txt', 'a') as f:
   f.write('\n\n################################################################################')
 f.close()  
 
+
 ############################################
 
+
+# Outputting the final processed print passes to the changelog
 with open('changelog.txt', 'a') as f:
   # Print final print passes
-  f.write('\n\nFinal print passes:\n\n')
+  f.write('\n\nFinal print passes, single material (before any downsampling or overlapping):\n\n')
   for passNum in print_passes_processed:
     f.write(f'Pass {passNum} \n{print_passes_processed[passNum]}')
     f.write('\n\n')
 f.close()
 
-##### Output #####
+with open('changelog.txt', 'a') as f:
+  f.write('\nNow plotting final print passes (single material) - saved to outputs folder.\n')
+f.close()
+
+
+##### Output to terminal #####
 print('\nGap closure completed. Now plotting final print passes (single material).\n')
+
 
 ############################################### Plot: Final Print Passes (Single Material) ##############################################
 
@@ -3093,7 +3193,7 @@ if plots == 1:
   # Store output graphs
   fig.write_html(f'outputs/network_SM.html') 
 
-############################################### Optional downsampling to decrease print resolution ###############################################
+############################################### Optional: downsampling to decrease print resolution ###############################################
 
 print_passes_processed_downsample = {}
 
@@ -3190,6 +3290,10 @@ if plots == 1 and downsample == 1:
   print('Plotted downsampled network.\n')
 
 ################################################## Preserve print passes for single material ############################################
+
+with open('changelog.txt', 'a') as f:
+  f.write('\nNow copying print_passes_processed to print_passes_processed_SM.\n')
+f.close()
 
 print_passes_processed_SM = copy.deepcopy(print_passes_processed)
 
@@ -3526,9 +3630,14 @@ if plots == 1 and multimaterial == 1:
     else:
       color_array.append("crimson")
 
-
-  fig = go.Figure(layout_title_text = 'Arterial vs Venous')
+  fig = go.Figure()
+  if downsample == 1:
+    fig = go.Figure(layout_title_text = 'Arterial vs Venous (Downsampled)')
+  else:
+    fig = go.Figure(layout_title_text = 'Arterial vs Venous')
   config = dict({'scrollZoom': True})
+
+
   for i in x:
     fig.add_trace(go.Scatter3d(x=x[i], y=y[i], z=z[i], line_color=color_array[i]))
     fig.update_traces(marker_size = 2)
@@ -3595,6 +3704,368 @@ if numColumns > 3 and speed_calc == 1:
 
 else:
   print('\nNow generating output files.')
+
+
+############################################### Optionally adding overlap: Single Material ##########################################################
+
+
+# If user specified a number of nodes by which to overlap
+if num_overlap != 0:
+
+  pass_ends_on_shared = []
+  pass_with_shared = []
+  common_node = []
+
+  # Find the print passes which end on a previously-printed node
+  keepTrack = 0
+  with open('changelog.txt', 'a') as f:
+    for i in print_passes_processed_SM:
+      f.write(f'i={i}\n')
+      if keepTrack == 0: # check all passes after the first one
+        f.write(f'keepTrack = {keepTrack}\n')
+        keepTrack = keepTrack+1
+        continue
+      else:
+        check_last_node = print_passes_processed_SM[i][-1] # last node of print pass
+        f.write(f'Checking node {check_last_node}\n')
+        for j in print_passes_processed_SM:
+          for k in print_passes_processed_SM[j]:
+            if k == check_last_node and i != j and i>j:
+              #with open('changelog.txt', 'a') as f:
+              f.write(f'Node {check_last_node} in Pass {i} appears in previously-printed Pass {j}.\n')
+              pass_ends_on_shared.append(i)
+              pass_with_shared.append(j)
+              common_node.append(check_last_node)
+            else:
+              continue
+    f.write(f'pass_ends_on_shared {pass_ends_on_shared}\n')
+    f.write(f'pass_with_shared {pass_with_shared}\n')
+    f.write(f'common_node {common_node}\n')
+
+
+
+    # Retrace nodes for gap closure (optional)
+    trackPoint = 0 # tracker as we iterate through pass_ends_on_shared
+    # for each item in pass_with_shared (same length as pass_ends_on_shared)
+    for i in pass_with_shared:
+      # if we haven't yet iterated through the entire pass_ends_on_shared list
+      if trackPoint < len(pass_ends_on_shared):
+        #f.write(f'len+1 = {len(pass_ends_on_shared)}\n')
+        # find the index of the common_node in pass_with_shared
+        idx = print_passes_processed_SM[i].index(common_node[trackPoint])
+        idx_count = 0
+        #f.write(f'trackPoint {trackPoint}\n')
+        # if node is not first node in pass_with_shared
+        if idx != 0 and idx-(idx_count+1) > 0 :
+          # collect neighbors of already-printed shared node in pass containing already-printed shared node
+          while idx_count < num_overlap and (idx-(idx_count+1)) >= 0:
+            #f.write(f'idx {idx} idx_count {idx_count} i {i}   idx-idx_count-1   {idx-idx_count-1}\n')
+            print_passes_processed_SM[pass_ends_on_shared[trackPoint]].append(print_passes_processed_SM[i][idx-(idx_count+1)])
+            f.write(f'Appending node {print_passes_processed_SM[i][idx-(idx_count+1)]} from pass {pass_with_shared[trackPoint]} to pass {pass_ends_on_shared[trackPoint]}.\n')
+            idx_count = idx_count+1
+            #f.write(f'idx_count {idx_count}\n')
+          trackPoint = trackPoint+1
+          #f.write(f'trackPoint {trackPoint}\n')
+        else:
+          trackPoint = trackPoint+1
+          #f.write(f'else trackPoint {trackPoint}\n')  
+          continue
+      else:
+        continue
+
+  f.close()
+
+
+  with open('changelog.txt', 'a') as f:
+    # Print final print passes
+    f.write('\n\nFinal single material print passes (after overlap applied):\n\n')
+    for passNum in print_passes_processed_SM:
+      f.write(f'Pass {passNum} \n{print_passes_processed_SM[passNum]}')
+      f.write('\n\n')
+  f.close()
+
+
+############################################### Optionally adding a gap closure file: Single Material ##########################################################
+
+# If user specified the existence of a separate gap closure file
+if close_var_SM == 1:
+
+  # Extract list of passes to extend
+  with open(f'{gap_file_SM}','r') as gapfile:
+    gap_pass_SM = gapfile.readlines()
+    gap_pass_SM = [int(item.rstrip()) for item in gap_pass_SM]
+    with open ('changelog.txt','a') as f:
+      f.write(f'\nExtend SM {gap_pass_SM}')
+      f.close()
+  f.close()
+
+  # Extract amount by which to extend the print pass (deltas)
+  delta_x_SM = []
+  delta_y_SM = []
+  delta_z_SM = []
+  with open(f'{deltas_file_SM}','r') as deltafile:
+    for coordLine in deltafile:
+      pass_delta = coordLine.split()
+      int_delta = [float(s) for s in pass_delta]
+      delta_x_SM.append(int_delta[0])
+      delta_y_SM.append(int_delta[1])
+      delta_z_SM.append(int_delta[2])
+      with open('changelog.txt','a') as f:
+        f.write(f'\nFloat{int_delta}')
+        f.close()
+    with open('changelog.txt','a') as f:
+      f.write(f'\nDelta_x_SM{delta_x_SM}')
+      f.write(f'\nDelta_y_SM{delta_y_SM}')
+      f.write(f'\nDelta_z_SM{delta_z_SM}')
+      f.close()
+  f.close()
+
+############################################### Optionally adding a gap closure file: Multimaterial ##########################################################
+
+# If user specified the existence of a separate gap closure file
+if close_var_MM == 1:
+
+  # Extract list of passes to extend
+  with open(f'{gap_file_MM}','r') as gapfile:
+    gap_pass_MM = gapfile.readlines()
+    gap_pass_MM = [int(item.rstrip()) for item in gap_pass_MM]
+    with open ('changelog.txt','a') as f:
+      f.write(f'\nExtend MM {gap_pass_MM}')
+      f.close()
+  f.close()
+
+  # Extract amount by which to extend the print pass (deltas)
+  delta_x_MM = []
+  delta_y_MM = []
+  delta_z_MM = []
+  with open(f'{deltas_file_MM}','r') as deltafile:
+    for coordLine in deltafile:
+      pass_delta = coordLine.split()
+      int_delta = [float(s) for s in pass_delta]
+      delta_x_MM.append(int_delta[0])
+      delta_y_MM.append(int_delta[1])
+      delta_z_MM.append(int_delta[2])
+      with open('changelog.txt','a') as f:
+        f.write(f'\nFloat{int_delta}')
+        f.close()
+    with open('changelog.txt','a') as f:
+      f.write(f'\nDelta_x_MM{delta_x_MM}')
+      f.write(f'\nDelta_y_MM{delta_y_MM}')
+      f.write(f'\nDelta_z_MM{delta_z_MM}')
+      f.close()
+  f.close()
+
+
+
+############################################### Optionally adding overlap: Multimaterial ##########################################################
+
+# If multimaterial specified
+if multimaterial == 1:
+
+  # If user specified a number of nodes by which to overlap
+  if num_overlap != 0:
+
+    pass_ends_on_shared = []
+    pass_with_shared = []
+    common_node = []
+
+    # Find the print passes which end on a previously-printed node
+    keepTrack = 0
+    with open('changelog.txt', 'a') as f:
+      for i in print_passes_processed:
+        f.write(f'i={i}\n')
+        if keepTrack == 0: # check all passes after the first one
+          f.write(f'keepTrack = {keepTrack}\n')
+          keepTrack = keepTrack+1
+          continue
+        else:
+          check_last_node = print_passes_processed[i][-1] # last node of print pass
+          f.write(f'Checking node {check_last_node}\n')
+          for j in print_passes_processed:
+            for k in print_passes_processed[j]:
+              if k == check_last_node and i != j and i>j:
+                #with open('changelog.txt', 'a') as f:
+                f.write(f'Node {check_last_node} in Pass {i} appears in previously-printed Pass {j}.\n')
+                pass_ends_on_shared.append(i)
+                pass_with_shared.append(j)
+                common_node.append(check_last_node)
+              else:
+                continue
+      f.write(f'pass_ends_on_shared {pass_ends_on_shared}\n')
+      f.write(f'pass_with_shared {pass_with_shared}\n')
+      f.write(f'common_node {common_node}\n')
+
+
+
+      # Retrace nodes for gap closure (optional)
+      trackPoint = 0 # tracker as we iterate through pass_ends_on_shared
+      # for each item in pass_with_shared (same length as pass_ends_on_shared)
+      for i in pass_with_shared:
+        # if we haven't yet iterated through the entire pass_ends_on_shared list
+        if trackPoint < len(pass_ends_on_shared):
+          #f.write(f'len+1 = {len(pass_ends_on_shared)}\n')
+          # find the index of the common_node in pass_with_shared
+          idx = print_passes_processed[i].index(common_node[trackPoint])
+          idx_count = 0
+          #f.write(f'trackPoint {trackPoint}\n')
+          # if node is not first node in pass_with_shared
+          if idx != 0 and idx-(idx_count+1) > 0 :
+            # collect neighbors of already-printed shared node in pass containing already-printed shared node
+            while idx_count < num_overlap and (idx-(idx_count+1)) >= 0:
+              #f.write(f'idx {idx} idx_count {idx_count} i {i}   idx-idx_count-1   {idx-idx_count-1}\n')
+              print_passes_processed[pass_ends_on_shared[trackPoint]].append(print_passes_processed[i][idx-(idx_count+1)])
+              f.write(f'Appending node {print_passes_processed[i][idx-(idx_count+1)]} from pass {pass_with_shared[trackPoint]} to pass {pass_ends_on_shared[trackPoint]}.\n')
+              idx_count = idx_count+1
+              #f.write(f'idx_count {idx_count}\n')
+            trackPoint = trackPoint+1
+            #f.write(f'trackPoint {trackPoint}\n')
+          else:
+            trackPoint = trackPoint+1
+            #f.write(f'else trackPoint {trackPoint}\n')  
+            continue
+        else:
+          continue
+
+    f.close()
+
+
+    with open('changelog.txt', 'a') as f:
+      # Print final print passes
+      f.write('\n\nFinal multimaterial print passes (after overlap applied):\n\n')
+      for passNum in print_passes_processed:
+        f.write(f'Pass {passNum} \n{print_passes_processed[passNum]}')
+        f.write('\n\n')
+    f.close()
+
+# If not printing multimaterial
+else:
+  print('\nskipping this block (printing single material, not multi-material)')
+
+
+############################################### Optional Plot: Final Print Passes (Single Material, With Overlap) ##############################################
+
+if plots == 1 and num_overlap != 0:
+
+  x = {}
+  y = {}
+  z = {}
+  for i in print_passes_processed_SM:
+    x[i] = []
+    y[i] = []
+    z[i] = []
+    for j in print_passes_processed_SM[i]:
+      x[i].append(points_array[j][0])
+      y[i].append(points_array[j][1])
+      z[i].append(points_array[j][2])
+
+  fig = go.Figure()
+  if downsample == 1:
+    fig = go.Figure(layout_title_text = 'Single Material (Overlap, Downsampled)')
+  else:
+    fig = go.Figure(layout_title_text = 'Single Material (Overlap)')
+  config = dict({'scrollZoom': True})
+  for i in x:
+    fig.add_trace(go.Scatter3d(x=x[i], y=y[i], z=z[i]))
+    fig.update_traces(marker_size = 2)
+    fig.update_layout(title_x=0.5)
+
+  # Create and add slider
+  steps = []
+  for i in range(len(fig.data)):
+      step = dict(
+          method="update",
+          args=[{"visible": [False] * len(fig.data)},
+                {"title": "Single Material (Overlap) <br>[Print Pass: " + str(i) + "]"}],  
+      )
+      for j in range(0,i+1):
+        step["args"][0]["visible"][j] = True
+      steps.append(step)
+
+  sliders = [dict(
+      currentvalue={"prefix": "Print pass: "},
+      steps=steps
+  )]
+
+  fig.update_layout(
+      sliders=sliders,
+      margin=dict(l=30, r=30, t=30, b=30),
+    title_x=0.5
+  )
+
+  fig.update_scenes(aspectmode='cube')
+
+  # Store output graphs
+  fig.write_html(f'outputs/network_SM_overlap.html') 
+
+
+########################################### Optional Plot: Final Print Passes (Arterial vs. Venous) (Overlap) ##########################################
+
+if plots == 1 and multimaterial == 1 and num_overlap != 0:
+
+  x = {}
+  y = {}
+  z = {}
+  for i in print_passes_processed:
+    x[i] = []
+    y[i] = []
+    z[i] = []
+    for j in print_passes_processed[i]:
+      x[i].append(points_array[j][0])
+      y[i].append(points_array[j][1])
+      z[i].append(points_array[j][2])
+
+
+  color_array = []
+  for i in print_passes_processed_artven:
+    if print_passes_processed_artven[i][-1] == 0:
+      color_array.append("blue")
+    else:
+      color_array.append("crimson")
+
+  fig = go.Figure()
+  if downsample == 1:
+    fig = go.Figure(layout_title_text = 'Arterial vs Venous (Overlap, Downsampled)')
+  else:
+    fig = go.Figure(layout_title_text = 'Arterial vs Venous (Overlap)')
+  config = dict({'scrollZoom': True})
+
+  for i in x:
+    fig.add_trace(go.Scatter3d(x=x[i], y=y[i], z=z[i], line_color=color_array[i]))
+    fig.update_traces(marker_size = 2)
+    fig.update_layout(title_x=0.5)
+
+  # Create and add slider
+  steps = []
+  for i in range(len(fig.data)):
+      step = dict(
+          method="update",
+          args=[{"visible": [False] * len(fig.data)},
+                {"title": "Arterial vs Venous <br>[Print Pass: " + str(i) + "]"}],  # layout attribute
+      )
+      for j in range(0,i+1):
+        step["args"][0]["visible"][j] = True  # Toggle i'th trace to "visible"
+      steps.append(step)
+
+  sliders = [dict(
+      currentvalue={"prefix": "Print pass: "},
+      steps=steps
+  )]
+
+  fig.update_layout(
+      sliders=sliders,
+      margin=dict(l=30, r=30, t=30, b=30),
+      title_x=0.5
+  )
+
+  fig.update_scenes(aspectmode='cube')
+
+  # Store output graphs
+  fig.write_html(f'outputs/network_MM.html') 
+
+  print('\nFinished plotting passes for multi-material network.')
+
+
+
 
 ############################################### Output: .txt files for single material print ###############################################
 
@@ -3915,9 +4386,232 @@ if multimaterial == 1:
 print('\nGenerated output files. X-CAVATE has completed.')
 
 
-############################ Generate g-code (Printess) | SINGLE MATERIAL | CONSTANT OR CHANGING RADII ##################################
+############################ Generate g-code | SINGLE MATERIAL (PRESSURE-BASED) | CONSTANT OR CHANGING RADII ##################################
 
-with open('gcode.txt', 'w') as f:
+if printer_type == 0:
+
+  gapTracker = 0
+
+  with open('gcode_SM_custom.txt', 'w') as f:
+
+    # Header
+    f.write(';=========== Begin GCODE ============= \n')
+
+    print('\n')
+
+    if custom_gcode == 1:
+      with open(f'{headerCode}','r') as headerText:
+        for line in headerText:
+          f.write(line)
+        f.write('\n')
+
+    # Network
+    for i in range(0,len(print_passes_processed_SM)):
+      j_counter = 0
+      for j in print_passes_processed_SM[i]: # coordinate of print pass
+        x = round(points_array[j, 0], numDecimalsOutput)
+        y = round(points_array[j, 1], numDecimalsOutput)
+        z = round(points_array[j, 2], numDecimalsOutput)
+        # if changing radii
+        if numColumns > 3 and speed_calc == 1:
+          printspeed = radius_speed_SM[j]
+        # if constant radius
+        if speed_calc == 0:
+          printspeed = print_speed
+        # Start of first print pass
+        if j_counter == 0 and i == 0:
+          f.write('G90 \n')
+          f.write(f'G92 X{x} Y{y} {printhead1_axis}{z} \n')
+          f.write(f'G90 F{printspeed} \n')
+          # Start extrusion (including dwell)
+          if custom_gcode == 1:
+            with open(f'{startExtrusionCode}','r') as startExtrusionText:
+              for line in startExtrusionText:
+                f.write(line)
+              f.write('\n')
+          f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed}\n')
+        # Start of each print pass (except first)
+        elif j_counter == 0 and i != 0:
+          f.write(f';Print pass {i} \n')
+          f.write('G90 \n')
+          # Stop extrusion (including dwell)
+          if custom_gcode == 1:
+            with open(f'{stopExtrusionCode}','r') as stopExtrusionText:
+              for line in stopExtrusionText:
+                f.write(line)
+              f.write('\n')
+          f.write(f'G1 X{x} Y{y} \n') # without extrusion
+          f.write('G90 \n')
+          f.write(f'G1 X{x} Y{y} {printhead1_axis}{z}\n')
+          # Start extrusion (code for initial)
+          f.write('G91 \n')
+          # Start extrusion
+          if custom_gcode == 1:
+            with open(f'{startExtrusionCode}','r') as startExtrusionText:
+              for line in startExtrusionText:
+                f.write(line)
+              f.write('\n')
+          f.write('G90 \n')
+          f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed}\n')
+        else:
+          f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed}\n')
+        j_counter += 1
+      # Optionally extending the end of the print pass for gap closure
+      if close_var_SM == 1 and i in gap_pass_SM:
+        f.write(f';##### Extra segment #####\n')
+        f.write(f'G91 X{delta_x_SM[gapTracker]} Y{delta_y_SM[gapTracker]} {printhead1_axis}{delta_z_SM[gapTracker]} F{printspeed}\n')
+        f.write(f'G90\n')
+        f.write(f';########################\n')
+        gapTracker += 1
+      # End of print pass (stop extrusion)
+      f.write('G91 \n')
+      # Stop extrusion (including dwell)
+      if custom_gcode == 1:
+        with open(f'{stopExtrusionCode}','r') as stopExtrusionText:
+          for line in stopExtrusionText:
+            f.write(line)
+          f.write('\n')
+      f.write(f'G1 {printhead1_axis}{initial_lift} F{customZJogSpeed} \n') # initial nozzle lift
+      f.write('G90 \n')
+      f.write(f'G1 {printhead1_axis}{networkTop} F10 \n')
+
+
+    # Footer
+    f.write('G90 \n')
+    f.write(f'G1 {printhead1_axis}{containerHeight+10} \n')
+    #f.write('M2 \n')
+
+  f.close()
+
+############################ Generate g-code | SINGLE MATERIAL (EXTRUSION-BASED) | CONSTANT OR CHANGING RADII ##################################
+
+if custom_gcode == 1 and printer_type == 1:
+
+  gapTracker = 0
+
+  with open('gcode_SM_custom.txt', 'w') as f:
+
+    # Header
+    f.write(';=========== Begin GCODE ============= \n')
+
+    print('\n')
+
+    if custom_gcode == 1:
+      with open(f'{headerCode}','r') as headerText:
+        for line in headerText:
+          f.write(line)
+        f.write('\n')
+
+    #Track extrusion position
+    plungerPosition = 0
+      
+    # Network
+    for i in range(0,len(print_passes_processed_SM)):
+      j_counter = 0
+      for j in print_passes_processed_SM[i]: # coordinate of print pass
+        x = round(points_array[j, 0], numDecimalsOutput)
+        y = round(points_array[j, 1], numDecimalsOutput)
+        z = round(points_array[j, 2], numDecimalsOutput)
+        r = round(points_array[j, 3], numDecimalsOutput)
+        # if changing radii
+        if numColumns > 3 and speed_calc == 1:
+          printspeed = radius_speed_SM[j]
+        # if constant radius
+        if speed_calc == 0:
+          printspeed = print_speed
+        # Start of first print pass
+        if j_counter == 0 and i == 0:
+          f.write('G90 \n')
+          f.write(f'G92 X{x} Y{y} {printhead1_axis}{z} \n')
+          # Start extrusion
+          if custom_gcode == 1:
+            f.write('G91 \n')
+            with open(f'{startExtrusionCode}','r') as startExtrusionText:
+              for line in startExtrusionText:
+                f.write(line)
+              f.write('\n')
+            f.write('G90 \n')
+            plungerPosition += customExtrusionStartValue
+        # Start of each print pass (except first)
+        elif j_counter == 0 and i != 0:
+          f.write(f';Print pass {i} \n')
+          f.write('G90 \n')
+          f.write(f'G1 X{x} Y{y} F{customJogSpeed}\n') # without extrusion
+          f.write(f'G1 {printhead1_axis}{z} F{customJogSpeed}\n')
+          # Start extrusion
+          if custom_gcode == 1:
+            f.write('G91 \n')
+            with open(f'{startExtrusionCode}','r') as startExtrusionText:
+              for line in startExtrusionText:
+                f.write(line)
+              f.write('\n')
+            f.write('G90 \n')
+            plungerPosition += customExtrusionStartValue
+        else:
+
+          # Previous coordinates (for extrusion calculation)
+          prev_node = print_passes_processed_SM[i][j_counter-1]
+          xp = points_array[prev_node, 0]
+          yp = points_array[prev_node, 1] 
+          zp = points_array[prev_node, 2]
+
+          # Calculate norm
+          diff = np.array([x-xp, y-yp, z-zp])
+          norm = np.linalg.norm(diff)
+
+          if useRadiiExtrusion == 0:
+            lineRadius = customExtrusionLineDiameter/2
+          elif useRadiiExtrusion == 1 and numColumns > 3:
+            lineRadius = r
+
+          customExtrusionSyringeRadius = customExtrusionSyringeDiameter/2
+
+          # Calculate extrusion amount and update the plunger position
+          extrusionValue = customExtrusionFactor * norm * (lineRadius/customExtrusionSyringeRadius)**2
+          plungerPosition += extrusionValue
+
+          f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} {printhead_1}{round(plungerPosition, numDecimalsOutput)} F{printspeed}\n')
+
+        j_counter += 1
+      # Optionally extending the end of the print pass for gap closure
+      if close_var_SM == 1 and i in gap_pass_SM:
+
+        # Calculate norm of extension segment
+        norm = np.linalg.norm([delta_x_SM[gapTracker], delta_y_SM[gapTracker], delta_z_SM[gapTracker]])
+
+        # Calculate the extrusion amount using the last value of lineRadius and update the plunger position
+        extrusionValue = customExtrusionFactor * norm * (lineRadius/customExtrusionSyringeRadius)**2
+        plungerPosition += extrusionValue
+
+        f.write(f';##### Extra segment #####\n')
+        f.write(f'G91 \n')
+        f.write(f'G1 X{round(delta_x_SM[gapTracker], numDecimalsOutput)} Y{round(delta_y_SM[gapTracker], numDecimalsOutput)} {printhead1_axis}{round(delta_z_SM[gapTracker], numDecimalsOutput)} {printhead_1}{round(extrusionValue, numDecimalsOutput)} F{printspeed}\n')
+        f.write(f';########################\n')
+        gapTracker += 1
+      # End of print pass (stop extrusion)
+      f.write('G91 \n')
+      if custom_gcode == 1:
+      # Stop extrusion
+        with open(f'{stopExtrusionCode}','r') as stopExtrusionText:
+          for line in stopExtrusionText:
+            f.write(line)
+          f.write('\n')
+        plungerPosition += customExtrusionStopValue
+      f.write(f'G1 {printhead1_axis}{initial_lift} F{customZJogSpeed} \n')
+      f.write('G90 \n')
+      f.write(f'G1 {printhead1_axis}{networkTop} F{customJogSpeed} \n')
+
+    # Footer
+    f.write(f'G1 {printhead1_axis}{containerHeight+10} \n')
+
+  f.close()
+
+
+############################ Generate g-code (PRINTESS) | SINGLE MATERIAL | CONSTANT OR CHANGING RADII ##################################
+
+gapTracker = 0
+
+with open('gcode_SM_printess.txt', 'w') as f:
 
   # Header
   f.write(';=========== Begin GCODE ============= \n')
@@ -3936,76 +4630,355 @@ with open('gcode.txt', 'w') as f:
         printspeed = radius_speed_SM[j]
       # if constant radius
       if speed_calc == 0:
-        printspeed = 1
+        printspeed = print_speed
       # Start of first print pass
       if j_counter == 0 and i == 0:
         f.write('VELOCITY ON \n')
         f.write('ROUNDING ON \n')
         f.write('G90 \n')
-        f.write(f'G92 X{x} Y{y} A{z} \n')
-        f.write('Enable Aa \n')
+        f.write(f'G92 X{x} Y{y} {printhead1_axis}{z} \n')
+        f.write(f'Enable {printhead_1} \n')
         f.write(f'G90 F{printspeed} \n')
-        f.write('BRAKE Aa 0 \n') # start extrude
-        f.write('DWELL 0.08 \n') # DWELL
-        f.write(f'G1 X{x} Y{y} A{z} F{printspeed}\n')
+        f.write(f'BRAKE {printhead_1} 0 \n') # start extrude
+        f.write(f'DWELL {dwell_start} \n')
+        f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed}\n')
       # Start of each print pass (except first)
       elif j_counter == 0 and i != 0:
         f.write(f';Print pass {i} \n')
         f.write('G90 \n')
-        f.write('BRAKE Aa 1 \n') # stop extrusion
+        f.write(f'BRAKE {printhead_1} 1 \n') # stop extrusion
         f.write(f'G1 X{x} Y{y} \n') # without extrusion
         f.write('G90 \n')
-        f.write(f'G1 X{x} Y{y} A{z}\n')
+        f.write(f'G1 X{x} Y{y} {printhead1_axis}{z}\n')
         # Start extrusion (code for initial)
-        f.write('Enable Aa \n')
+        f.write(f'Enable {printhead_1} \n')
         f.write('G91 \n')
-        f.write('BRAKE Aa 0 \n') # start extrusion
-        f.write('DWELL 0.08 \n') # DWELL
+        f.write(f'BRAKE {printhead_1} 0 \n') # start extrusion
+        f.write(f'DWELL {dwell_start} \n')
         f.write('G90 \n')
-        f.write(f'G1 X{x} Y{y} A{z} F{printspeed}\n')
+        f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed}\n')
       else:
-        f.write(f'G1 X{x} Y{y} A{z} F{printspeed}\n')
+        f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed}\n')
       j_counter += 1
+    # Optionally extending the end of the print pass for gap closure
+    if close_var_SM == 1 and i in gap_pass_SM:
+      f.write(f';##### Extra segment #####\n')
+      f.write(f'G91 X{delta_x_SM[gapTracker]} Y{delta_y_SM[gapTracker]} {printhead1_axis}{delta_z_SM[gapTracker]} F{printspeed}\n')
+      f.write(f'G90\n')
+      f.write(f';########################\n')
+      gapTracker += 1
     # End of print pass (stop extrusion)
-    f.write('Enable Aa \n')
+    f.write(f'Enable {printhead_1} \n')
     f.write('G91 \n')
-    f.write('DWELL 0.08 \n')
-    f.write('BRAKE Aa 1 \n') # stop extrusion
-    f.write(f'G1 A0.5 F0.25 \n')
+    f.write(f'DWELL {dwell_end} \n')
+    f.write(f'BRAKE {printhead_1} 1 \n') # stop extrusion
+    f.write(f'G1 {printhead1_axis}{initial_lift} F{customZJogSpeed} \n') # initial nozzle lift
     f.write('G90 \n')
-    f.write(f'G1 A{networkTop} F10 \n')
+    f.write(f'G1 {printhead1_axis}{networkTop} F{customJogSpeed} \n')
 
 
   # Footer
   f.write('G90 \n')
-  f.write('G1 A60 \n')
+  f.write(f'G1 {printhead1_axis}{containerHeight+10} \n')
   f.write('M2 \n')
 
 f.close()
 
-############################ # Generate g-code (Printess) | MULTIMATERIAL | CONSTANT OR CHANGING RADII ##################################
+############################ # Generate g-code | MULTIMATERIAL | CONSTANT OR CHANGING RADII ##################################
 
+gapTracker = 0
 
 if multimaterial == 1:
 
   # Place the arterial (red) ink on the left printead (Aa), and the venous (blue)
   # ink on the righthand printhead (Ab).
 
-  dist_between_printheads = 103
 
-  resting_pressure = 10
-  active_pressure = 5
-
+  # Specifying which syringe connects to which pressure box
   arterial_COM = 2
   venous_COM = 1
 
   # Need to start by zeroing at the arterial printhead
 
   z_range = abs(max(points_array[:,2]) - min(points_array[:,2]))
-  cubeHeight = 50 # mm
   clearance = 2 # mm
 
-  with open('gcode_multimaterial.txt', 'w') as f:
+  # y-offset between nozzles
+  if args.front_nozzle == 1: # venous (right) in front of arterial (left)
+    y_offsetToVen = ydist_between_printheads
+    y_offsetToArt = -ydist_between_printheads
+  else: # venous (right) behind arterial (left)
+    y_offsetToVen = -ydist_between_printheads
+    y_offsetToArt = ydist_between_printheads
+
+
+  with open('gcode_MM_custom.txt', 'w') as f:
+
+    # Header
+    f.write(';=========== Begin GCODE ============= \n')
+
+    if custom_gcode == 1:
+      with open(f'{headerCode}','r') as headerText:
+        for line in headerText:
+          f.write(line)
+        f.write('\n')
+
+    print('\n')
+
+    # Network
+    for i in range(0,len(print_passes_processed)):
+      j_counter = 0
+      for j in print_passes_processed[i]: # coordinate of print pass
+        x = round(points_array[j, 0], numDecimalsOutput)
+        y = round(points_array[j, 1], numDecimalsOutput)
+        z = round(points_array[j, 2], numDecimalsOutput)
+        if speed_calc == 1:
+          printspeed = radius_speed_MM[j]
+        if speed_calc == 0:
+          printspeed = print_speed
+        if len(print_passes_processed[i]) > 1:
+          node = print_passes_processed[i][1] # second node in print pass
+          artven = points_array[node,4] # artven of second node in print pass
+        else:
+          artven = points_array[j, 4] # artven of first (only) node in print pass
+        # Start of first print pass
+        if j_counter == 0 and i == 0:
+          # Default to arterial axis
+          curr_printhead = printhead_1
+          curr_axis = printhead1_axis
+          other_printhead = printhead_2
+          other_axis = printhead2_axis
+          curr = 1 # arterial
+          f.write('G90 \n')
+          if artven == 0 and curr == 1: # move to venous if necessary
+            curr_printhead = printhead_2
+            curr_axis = printhead2_axis
+            other_printhead = printhead_1
+            other_axis = printhead1_axis
+            f.write('; Print Pass 0 \n')
+            f.write('; moving to VENOUS \n')
+            # Set other_printhead print pressure to resting_pressure (set arterial to "resting")
+            if custom_gcode == 1:
+              with open(f'{rest_pressure_printhead1}','r') as restPrinthead1:
+                for line in restPrinthead1:
+                  f.write(line)
+                f.write('\n')
+            # Set curr_printhead print pressure to active_pressure (set venous to "active")
+            if custom_gcode == 1:
+              with open(f'{active_pressure_printhead2}','r') as activePrinthead2:
+                for line in activePrinthead2:
+                  f.write(line)
+                f.write('\n')
+            f.write(f'G91 G1 {printhead1_axis}{containerHeight+10} {printhead2_axis}{containerHeight+10} F{customJogSpeed} \n') # raise axes 1 and 2
+            f.write(f'G91 G1 X-{dist_between_printheads} F{customJogSpeedTranslation} \n')
+            f.write(f'G91 G1 Y{y_offsetToVen} F{customJogSpeed} \n')
+            f.write(f'G91 G1 {printhead1_axis}-{containerHeight+10} {printhead2_axis}-{containerHeight+10} F{customJogSpeed} \n')
+            f.write(f'G90 \n')
+            f.write(f'G92 X{x} Y{y} {printhead1_axis}{z} {printhead2_axis}{z} \n')
+            # Start extrusion of curr_printhead (including dwell)
+            if custom_gcode == 1:
+              with open(f'{startExtrusionCode_printhead2}','r') as startExtrusionText:
+                for line in startExtrusionText:
+                  f.write(line)
+                f.write('\n')
+            # Start extrusion of other_printhead (including dwell)
+            if custom_gcode == 1:
+              with open(f'{startExtrusionCode_printhead1}','r') as startExtrusionText:
+                for line in startExtrusionText:
+                  f.write(line)
+                f.write('\n')
+            f.write(f'G1 X{x} Y{y} {curr_axis}{z} F{printspeed} \n')
+            curr = 0
+          else:
+            f.write('; Print Pass 0 \n')
+            f.write(f'G92 X{x} Y{y} {curr_axis}{z} \n')
+            f.write('G90 F0.5 \n')
+            # Start extrusion of curr_printhead
+            if custom_gcode == 1:
+              with open(f'{startExtrusionCode_printhead1}','r') as startExtrusionText:
+                for line in startExtrusionText:
+                  f.write(line)
+                f.write('\n')
+            f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed} \n')
+        # Start of each print pass (except first)
+        elif j_counter == 0 and i != 0:
+          prev_point = print_passes_processed[i-1][-1]
+          prev_x = points_array[prev_point, 0]
+          prev_y = points_array[prev_point, 1]
+          prev_z = points_array[prev_point, 2]
+          f.write(f';Print pass {i} \n')
+          if (artven != 0 and curr == 0): # move to arterial if necessary; use != 0 to control for the scaleFactor
+            curr_printhead = printhead_1
+            curr_axis = printhead1_axis
+            other_printhead = printhead_2
+            other_axis = printhead2_axis
+            f.write(f'; moving to ARTERIAL \n')
+            # Set other_printhead print pressure to resting_pressure (set venous to "resting")
+            if custom_gcode == 1:
+              with open(f'{rest_pressure_printhead2}','r') as restPrinthead:
+                for line in restPrinthead:
+                  f.write(line)
+                f.write('\n')
+            # Set curr_printhead print pressure to active_pressure (set arterial to "active")
+            if custom_gcode == 1:
+              with open(f'{active_pressure_printhead1}','r') as activePrinthead:
+                for line in activePrinthead:
+                  f.write(line)
+                f.write('\n')
+            f.write(f'G91 G1 {printhead1_axis}{amount_up} {printhead2_axis}{amount_up} F{customJogSpeed} \n') # raise axes 1 and 2
+            f.write(f'G91 G1 X{dist_between_printheads} F{customJogSpeedTranslation} \n')
+            f.write(f'G91 G1 Y{y_offsetToArt} F{customJogSpeed} \n')
+            f.write(f'G91 G1 {printhead1_axis}-{amount_up} {printhead2_axis}-{amount_up} \n')
+            f.write(f'G90 \n')
+            f.write(f'G92 X{prev_x} Y{prev_y} \n')
+            f.write(f'G90 G1 X{x} Y{y} \n')
+            f.write(f'G1 X{x} Y{y} {curr_axis}{z} \n')
+            # Start extrusion of curr_printhead
+            if custom_gcode == 1:
+              with open(f'{startExtrusionCode_printhead1}','r') as startExtrusionText:
+                for line in startExtrusionText:
+                  f.write(line)
+                f.write('\n')
+            # Start extrusion of other_printhead
+            if custom_gcode == 1:
+              with open(f'{startExtrusionCode_printhead2}','r') as startExtrusionText:
+                for line in startExtrusionText:
+                  f.write(line)
+                f.write('\n')
+            curr = 1 # update printhead tracker
+          elif artven == 0 and curr == 1: # move to venous if necessary
+            curr_printhead = printhead_2
+            curr_axis = printhead2_axis
+            other_printhead = printhead_1
+            other_axis = printhead1_axis
+            f.write('; moving to VENOUS \n')
+            # Set other_printhead print pressure to resting_pressure (set arterial to "resting")
+            if custom_gcode == 1:
+              with open(f'{rest_pressure_printhead1}','r') as restPrinthead1:
+                for line in restPrinthead1:
+                  f.write(line)
+                f.write('\n')
+            # Set curr_printhead print pressure to active_pressure here (set venous to "active")
+            if custom_gcode == 1:
+              with open(f'{active_pressure_printhead2}','r') as activePrinthead2:
+                for line in activePrinthead2:
+                  f.write(line)
+                f.write('\n')
+            f.write(f'G91 G1 {printhead1_axis}{amount_up} {printhead2_axis}{amount_up} F{customJogSpeed} \n') # raise axes 1 and 2
+            f.write(f'G91 G1 X-{dist_between_printheads} F{customJogSpeedTranslation} \n')
+            f.write(f'G91 G1 Y{y_offsetToVen} F{customJogSpeed} \n')
+            f.write(f'G91 G1 {printhead1_axis}-{amount_up} {printhead2_axis}-{amount_up} \n')
+            f.write(f'G90 \n')
+            f.write(f'G92 X{prev_x} Y{prev_y} \n')
+            f.write(f'G90 G1 X{x} Y{y} \n')
+            f.write(f'G90 G1 X{x} Y{y} {curr_axis}{z} \n')
+            # Start extrusion of curr_printhead
+            if custom_gcode == 1:
+              with open(f'{startExtrusionCode_printhead2}','r') as startExtrusionText:
+                for line in startExtrusionText:
+                  f.write(line)
+                f.write('\n')
+            # Start extrusion of other_printhead
+            if custom_gcode == 1:
+              with open(f'{startExtrusionCode_printhead1}','r') as startExtrusionText:
+                for line in startExtrusionText:
+                  f.write(line)
+                f.write('\n')
+            curr = 0 # update printhead tracker
+          else:
+            # Active printhead is the desired printhead (e.g., want arterial and arterial is active)
+            f.write(f'G1 X{x} Y{y} \n')
+            f.write(f'G1 X{x} Y{y} {curr_axis}{z} \n')
+            # Start extrusion and dwell
+            if custom_gcode == 1:
+              with open(f'{startExtrusionCode_printhead1}','r') as startExtrusionText:
+                for line in startExtrusionText:
+                  f.write(line)
+                f.write('\n')
+              with open(f'{startExtrusionCode_printhead2}','r') as startExtrusionText:
+                for line in startExtrusionText:
+                  f.write(line)
+                f.write('\n')        
+            f.write(f'G1 X{x} Y{y} {curr_axis}{z} F{printspeed} \n')
+        else:
+          if j_counter == 0:
+            # Start extrusion and dwell
+            if custom_gcode == 1:
+              with open(f'{startExtrusionCode_printhead1}','r') as startExtrusionText:
+                for line in startExtrusionText:
+                  f.write(line)
+                f.write('\n')
+              with open(f'{startExtrusionCode_printhead2}','r') as startExtrusionText:
+                for line in startExtrusionText:
+                  f.write(line)
+                f.write('\n')
+            f.write(f'G1 X{x} Y{y} {curr_axis}{z} F{printspeed} \n')
+          else:
+            f.write(f'G1 X{x} Y{y} {curr_axis}{z} F{printspeed} \n')
+        j_counter += 1
+      # Optionally extending the end of the print pass for gap closure
+      if close_var_MM == 1 and i in gap_pass_MM:
+        f.write(f';##### Extra segment #####\n')
+        f.write(f'G91 X{delta_x_MM[gapTracker]} Y{delta_y_MM[gapTracker]} {curr_axis}{delta_z_MM[gapTracker]} F{printspeed}\n')
+        f.write(f'G90\n')
+        f.write(f';########################\n')
+        gapTracker += 1
+      # End of print pass
+      # Stop extrusion (including dwell)
+      if custom_gcode == 1:
+        with open(f'{stopExtrusionCode_printhead1}','r') as stopExtrusionText:
+          for line in stopExtrusionText:
+            f.write(line)
+          f.write('\n')
+        with open(f'{stopExtrusionCode_printhead2}','r') as stopExtrusionText:
+          for line in stopExtrusionText:
+            f.write(line)
+          f.write('\n')
+      f.write(f'G91 G1 {curr_axis}{initial_lift} F{customZJogSpeed} \n') # initial nozzle lift
+      f.write(f'G90 G1 {printhead1_axis}{networkTop} {printhead2_axis}{networkTop} F{customJogSpeed} \n') # raises axes 1 and 2
+      if curr == 1:
+        f.write(f'; ending on ARTERIAL \n')
+      if curr == 0:
+        f.write(f'; ending on VENOUS \n')
+
+
+
+    # Footer
+    f.write('G90 \n')
+    f.write(f'G1 {printhead1_axis}{containerHeight+10} \n')
+    #f.write('M2 \n')
+
+  f.close()
+
+############################ # Generate g-code (PRINTESS) | MULTIMATERIAL | CONSTANT OR CHANGING RADII ##################################
+
+gapTracker = 0
+
+if multimaterial == 1:
+
+  # Place the arterial (red) ink on the left printead (Aa), and the venous (blue)
+  # ink on the righthand printhead (Ab).
+
+
+  # Specifying which syringe connects to which pressure box
+  arterial_COM = 2
+  venous_COM = 1
+
+  # Need to start by zeroing at the arterial printhead
+
+  z_range = abs(max(points_array[:,2]) - min(points_array[:,2]))
+  clearance = 2 # mm
+
+  # y-offset between nozzles
+  if args.front_nozzle == 1: # venous (right) in front of arterial (left)
+    y_offsetToVen = ydist_between_printheads
+    y_offsetToArt = -ydist_between_printheads
+  else: # venous (right) behind arterial (left)
+    y_offsetToVen = -ydist_between_printheads
+    y_offsetToArt = ydist_between_printheads
+
+
+  with open('gcode_MM_printess.txt', 'w') as f:
 
     # Header
     f.write('DVAR $AP, $COM,$hFile,$press,$length,$lame,$cCheck \n')
@@ -4023,8 +4996,7 @@ if multimaterial == 1:
         if speed_calc == 1:
           printspeed = radius_speed_MM[j]
         if speed_calc == 0:
-          printspeed = 1
-        amount_up = 30
+          printspeed = print_speed
         if len(print_passes_processed[i]) > 1:
           node = print_passes_processed[i][1] # second node in print pass
           artven = points_array[node,4] # artven of second node in print pass
@@ -4033,19 +5005,19 @@ if multimaterial == 1:
         # Start of first print pass
         if j_counter == 0 and i == 0:
           # Default to arterial axis
-          curr_printhead = 'Aa'
-          curr_axis = 'A'
-          other_printhead = 'Ab'
-          other_axis = 'B'
-          curr = 1 # arterial (A, Aa)
+          curr_printhead = printhead_1
+          curr_axis = printhead1_axis
+          other_printhead = printhead_2
+          other_axis = printhead2_axis
+          curr = 1 # arterial
           f.write('VELOCITY ON \n')
           f.write('ROUNDING ON \n')
           f.write('G90 \n')
           if artven == 0 and curr == 1: # move to venous if necessary
-            curr_printhead = 'Ab'
-            curr_axis = 'B'
-            other_printhead = 'Aa'
-            other_axis = 'A'
+            curr_printhead = printhead_2
+            curr_axis = printhead2_axis
+            other_printhead = printhead_1
+            other_axis = printhead1_axis
             f.write('; Print Pass 0 \n')
             f.write('; moving to VENOUS \n')
             f.write(f'$COM={arterial_COM} \n') # "resting"
@@ -4054,16 +5026,17 @@ if multimaterial == 1:
             f.write(f'$COM={venous_COM} \n') # active
             f.write(f'$AP={active_pressure} \n') # active
             f.write('Call setPress P$COM Q$AP \n')
-            f.write(f'G91 G1 A60 B60 F5 \n') # raise axes 1 and 2
-            f.write(f'G91 G1 X-{dist_between_printheads} F10 \n')
-            f.write(f'G91 G1 A-60 B-60 F5 \n')
+            f.write(f'G91 G1 {printhead1_axis}{containerHeight+10} {printhead2_axis}{containerHeight+10} F{customJogSpeed} \n') # raise axes 1 and 2
+            f.write(f'G91 G1 X-{dist_between_printheads} F{customJogSpeedTranslation} \n')
+            f.write(f'G91 G1 Y{y_offsetToVen} F{customJogSpeed} \n')
+            f.write(f'G91 G1 {printhead1_axis}-{containerHeight+10} {printhead2_axis}-{containerHeight+10} F{customJogSpeed} \n')
             f.write(f'G90 \n')
-            f.write(f'G92 X{x} Y{y} A{z} B{z} \n')
+            f.write(f'G92 X{x} Y{y} {printhead1_axis}{z} {printhead2_axis}{z} \n')
             f.write(f'Enable {curr_printhead} \n') # START EXTRUSION
             f.write(f'Enable {other_printhead} \n') # OTHER START 
             f.write(f'BRAKE {curr_printhead} 0 \n') # START EXTRUSION
             f.write(f'BRAKE {other_printhead} 0 \n') # OTHER START
-            f.write(f'DWELL 0.75 \n') # START EXTRUSION
+            f.write(f'DWELL {dwell_start} \n') 
             f.write(f'G1 X{x} Y{y} {curr_axis}{z} F{printspeed} \n')
             curr = 0
           else:
@@ -4072,8 +5045,8 @@ if multimaterial == 1:
             f.write(f'Enable {curr_printhead} \n') # START EXTRUSION
             f.write('G90 F0.5 \n')
             f.write(f'BRAKE {curr_printhead} 0 \n') # START EXTRUSION
-            f.write('DWELL 0.75 \n') # START EXTRUSION
-            f.write(f'G1 X{x} Y{y} A{z} F{printspeed} \n')
+            f.write(f'DWELL {dwell_start} \n')
+            f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed} \n')
         # Start of each print pass (except first)
         elif j_counter == 0 and i != 0:
           prev_point = print_passes_processed[i-1][-1]
@@ -4082,10 +5055,10 @@ if multimaterial == 1:
           prev_z = points_array[prev_point, 2]
           f.write(f';Print pass {i} \n')
           if (artven != 0 and curr == 0): # move to arterial if necessary; use != 0 to control for the scaleFactor
-            curr_printhead = 'Aa'
-            curr_axis = 'A'
-            other_printhead = 'Ab'
-            other_axis = 'B'
+            curr_printhead = printhead_1
+            curr_axis = printhead1_axis
+            other_printhead = printhead_2
+            other_axis = printhead2_axis
             f.write(f'; moving to ARTERIAL \n')
             f.write(f'$COM={venous_COM} \n') # "resting"
             f.write(f'$AP={resting_pressure} \n') # "resting"
@@ -4093,9 +5066,10 @@ if multimaterial == 1:
             f.write(f'$COM={arterial_COM} \n') # active
             f.write(f'$AP={active_pressure} \n') # active
             f.write('Call setPress P$COM Q$AP \n')
-            f.write(f'G91 G1 A{amount_up} B{amount_up} F5 \n') # raise axes 1 and 2
-            f.write(f'G91 G1 X{dist_between_printheads} F5 \n')
-            f.write(f'G91 G1 A-{amount_up} B-{amount_up} \n')
+            f.write(f'G91 G1 {printhead1_axis}{amount_up} {printhead2_axis}{amount_up} F{customJogSpeed} \n') # raise axes 1 and 2
+            f.write(f'G91 G1 X{dist_between_printheads} F{customJogSpeedTranslation} \n')
+            f.write(f'G91 G1 Y{y_offsetToArt} F{customJogSpeed} \n')
+            f.write(f'G91 G1 {printhead1_axis}-{amount_up} {printhead2_axis}-{amount_up} \n')
             f.write(f'G90 \n')
             f.write(f'G92 X{prev_x} Y{prev_y} \n')
             f.write(f'G90 G1 X{x} Y{y} \n')
@@ -4104,16 +5078,16 @@ if multimaterial == 1:
             f.write(f'Enable {other_printhead} \n') # OTHER START 
             f.write(f'BRAKE {other_printhead} 0 \n') # OTHER START
             f.write(f'BRAKE {curr_printhead} 0 \n') # START EXTRUSION
-            f.write(f'DWELL 0.75 \n') # START EXTRUSION
+            f.write(f'DWELL {dwell_start} \n')
             curr = 1 # update printhead tracker
           elif artven == 0 and curr == 1: # move to venous if necessary
             # if (artven != second_point_artven): # handle instances of repeated point from multimaterial subdivision
             #   continue
             # else:
-            curr_printhead = 'Ab'
-            curr_axis = 'B'
-            other_printhead = 'Aa'
-            other_axis = 'A'
+            curr_printhead = printhead_2 # Ab
+            curr_axis = printhead2_axis # B
+            other_printhead = printhead_1 # Aa
+            other_axis = printhead1_axis # A
             f.write(f'; moving to VENOUS \n')
             f.write(f'$COM={arterial_COM} \n') # "resting"
             f.write(f'$AP={resting_pressure} \n') # "resting"
@@ -4121,9 +5095,10 @@ if multimaterial == 1:
             f.write(f'$COM={venous_COM} \n') # active
             f.write(f'$AP={active_pressure} \n') # active
             f.write('Call setPress P$COM Q$AP \n')
-            f.write(f'G91 G1 A{amount_up} B{amount_up} F5 \n') # raise axes 1 and 2
-            f.write(f'G91 G1 X-{dist_between_printheads} F5 \n')
-            f.write(f'G91 G1 A-{amount_up} B-{amount_up} \n')
+            f.write(f'G91 G1 {printhead1_axis}{amount_up} {printhead2_axis}{amount_up} F{customJogSpeed} \n') # raise axes 1 and 2
+            f.write(f'G91 G1 X-{dist_between_printheads} F{customJogSpeedTranslation} \n')
+            f.write(f'G91 G1 Y{y_offsetToVen} F{customJogSpeed} \n')
+            f.write(f'G91 G1 {printhead1_axis}-{amount_up} {printhead2_axis}-{amount_up} \n')
             f.write(f'G90 \n')
             f.write(f'G92 X{prev_x} Y{prev_y} \n')
             f.write(f'G90 G1 X{x} Y{y} \n')
@@ -4132,7 +5107,7 @@ if multimaterial == 1:
             f.write(f'Enable {other_printhead} \n') # OTHER START 
             f.write(f'BRAKE {other_printhead} 0 \n') # OTHER START
             f.write(f'BRAKE {curr_printhead} 0 \n') # START EXTRUSION
-            f.write(f'DWELL 0.75 \n') # START EXTRUSION
+            f.write(f'DWELL {dwell_start} \n')
             curr = 0 # update printhead tracker
           else:
             # Extrusion
@@ -4142,7 +5117,7 @@ if multimaterial == 1:
             f.write(f'Enable {other_printhead} \n') # OTHER START 
             f.write(f'BRAKE {other_printhead} 0 \n') # OTHER START
             f.write(f'BRAKE {curr_printhead} 0 \n') # START EXTRUSION
-            f.write(f'DWELL 0.75 \n') # START EXTRUSION
+            f.write(f'DWELL {dwell_start} \n')
             f.write(f'G1 X{x} Y{y} {curr_axis}{z} F{printspeed} \n')
         else:
           if j_counter == 0:
@@ -4150,17 +5125,24 @@ if multimaterial == 1:
             f.write(f'Enable {other_printhead} \n') # OTHER START 
             f.write(f'BRAKE {other_printhead} 0 \n') # OTHER START
             f.write(f'BRAKE {curr_printhead} 0 \n') # START EXTRUSION
-            f.write(f'DWELL 0.75 \n') # START EXTRUSION
+            f.write(f'DWELL {dwell_start} \n')
             f.write(f'G1 X{x} Y{y} {curr_axis}{z} F{printspeed} \n')
           else:
             f.write(f'G1 X{x} Y{y} {curr_axis}{z} F{printspeed} \n')
         j_counter += 1
+      # Optionally extending the end of the print pass for gap closure
+      if close_var_MM == 1 and i in gap_pass_MM:
+        f.write(f';##### Extra segment #####\n')
+        f.write(f'G91 X{delta_x_MM[gapTracker]} Y{delta_y_MM[gapTracker]} {curr_axis}{delta_z_MM[gapTracker]} F{printspeed}\n')
+        f.write(f'G90\n')
+        f.write(f';########################\n')
+        gapTracker += 1
       # End of print pass (stop extrusion)
-      f.write('DWELL 0.75 \n') # STOP EXTRUSION
+      f.write(f'DWELL {dwell_end} \n')
       f.write(f'BRAKE {curr_printhead} 1 \n') # STOP EXTRUSION
       f.write(f'BRAKE {other_printhead} 1 \n') # STOP OTHER
-      f.write(f'G91 G1 {curr_axis}0.5 F0.25 \n') # initial nozzle lift
-      f.write(f'G90 G1 A{networkTop} B{networkTop} F5 \n') # raise axes 1 and 2
+      f.write(f'G91 G1 {curr_axis}{initial_lift} F{customZJogSpeed} \n') # initial nozzle lift
+      f.write(f'G90 G1 {printhead1_axis}{networkTop} {printhead2_axis}{networkTop} F{customJogSpeed} \n') # raises axes 1 and 2
       if curr == 1:
         f.write(f'; ending on ARTERIAL \n')
       if curr == 0:
@@ -4170,15 +5152,14 @@ if multimaterial == 1:
 
     # Footer
     f.write('G90 \n')
-    f.write('G1 A60 \n')
+    f.write(f'G1 {printhead1_axis}{containerHeight+10} \n')
     f.write('M2 \n')
 
   f.close()
 
-
 ####################################################### Print Instructions ###############################################################
 
-  # x dimensions
+# x dimensions
 min_x = min(points_array[:,0])
 max_x = max(points_array[:,0])
 total_x = abs(min_x) + abs(max_x)
@@ -4210,35 +5191,39 @@ up = abs(total_z)
 
 x_start = (container_x + left - right) / 2
 y_start = (container_y + forward - backward) / 2
-z_start = (container_z - total_z) / 2
+z_start = (containerHeight - total_z) / 2
 
 print('These instructions assume +x is right, +y is backwards, and +z is upwards.\n')
 print('\n')
-print(f'For a container of dimensions x={container_x} mm, y={container_y} mm, z={container_z}mm, center the print by following these instructions.')
+print(f'For a container of dimensions x={container_x} mm, y={container_y} mm, z={containerHeight}mm, center the print by following these instructions.')
 
 print('\nFor SINGLE material:\n')
 print('1. Position nozzle in bottom left corner.')
-print('2. Set offset by entering the g-code command: G92 X0 Y0')
+print('2. Enter the g-code command: G92 X0 Y0')
 print(f'3. Move linearly to X{round(x_start,2)} Y{round(y_start,2)} with g-code command: G1 X{round(x_start,2)} Y{round(y_start,2)}')
 print(f'4. Manually maneuver the Z-axis until it is {round(z_start,2)} mm from the bottom of the container.')
-print(f'5. Press start!')
+print('5. Press start!')
 
 print(f'\nfor MULTIMATERIAL:\n')
-print('1. Zero first nozzle (arterial) with G92 X0 Y0 A0')
-print('2. Zero second nozzle (venous) with G92 B0')
-print('3. BEFORE MOVING ANYTHING, record the offset between the nozzles in X and Y. Then, update the offset in the g-code.')
-print('4. Position first nozzle (arterial) in bottom left corner of container.')
-print('5. Set offset by entering the g-code command: G92 X0 Y0')
-print(f'6. Enter: G1 X{round(x_start,2)} Y{round(y_start,2)}')
-print(f'7. Enter: G1 A0 B0')
-print(f'8. Manually maneuver FIRST nozzle until it is {round(z_start,2)} mm from the bottom of the container.')
-print(f'9. Record the current z-position of FIRST nozzle, and DO NOT RE-ZERO. Will now move the SECOND nozzle to the same z-position (step 10).')
-print(f'10. Enter: G1 B(current position of FIRST nozzle)')
-print(f'11. Just to reiterate... DO NOT RE-ZERO. Both nozzles are now at the correct starting position.')
-print(f'12. Press start!')
+print('If you have not already calibrated, calibrate as below:')
+print('To find the offset in x- and y- between the two nozzles:')
+print('1. Position first nozzle (arterial) on the Calibration Tip and enter: G92 X0 Y0 A0')
+print('2. Position second nozzle (venous) on the Calibration Tip and enter: G92 B0')
+print('3. BEFORE MOVING ANYTHING, record the offset between the nozzles in X and Y, which will be the current x- and y-coordinates of the venous nozzle.')
+print('4. Re-run x-cavate, inputting the offsets at the command line as offset_x and offset_y. Use the front_nozzle variable to specify whether the venous nozzle (right printhead) is in front (front_nozzle=1) or behind (front_nozzle=2) the arterial nozzle (left printhead).')
+print('\nTo position for multimaterial printing, after completing the calibration:')
+print('1. Position first nozzle (arterial) in left corner of the container, of the container face closest to the observer.')
+print('2. Enter the g-code command: G92 X0 Y0')
+print(f'3. Enter: G1 X{round(x_start,2)} Y{round(y_start,2)}')
+print('4. Enter: G1 A0 B0')
+print(f'5. Manually maneuver FIRST nozzle until it is {round(z_start,2)} mm from the bottom of the container.')
+print('6. Record the current z-position of FIRST nozzle, and DO NOT RE-ZERO. Will now move the SECOND nozzle to the same z-position (step 10).')
+print('7. Enter: G1 B(current position of FIRST nozzle)')
+print('8. Just to reiterate... DO NOT RE-ZERO. Both nozzles are now at the correct starting position.')
+print('9. Press start!')
 
 print(f'\n')
-print(f'Your print will have the following padding:\n')
+print('Your print will have the following padding:\n')
 print(f'left padding: {round(x_start - left,2)}')
 print(f'right padding: {round(container_x - (x_start + right),2)}')
 print(f'back padding: {round(container_y - (y_start + backward),2)}')
