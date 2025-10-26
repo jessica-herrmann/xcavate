@@ -88,9 +88,7 @@ Using the `pass_to_extend` .txt file, users can specify which print passes to ex
 <img width="555" height="77" alt="image" src="https://github.com/user-attachments/assets/00b3502b-892d-4684-8624-e76d3d15a8b2" />
 
 **3. Resting Extrusion**
-To avoid drying of the ink within the inactive nozzle during multimaterial printing, users can extrude ink through the inactive nozzle by specifying a --resting_pressure. By default, the value of this parameter is 10 psi, meaning that the inactive nozzle will extrude ink at 10 psi.
-
-To avoid extrusion through the inactive nozzle, set the value of resting_pressure to 0.
+To avoid drying of the ink within the inactive nozzle during multimaterial printing, users can extrude ink through the inactive nozzle by specifying a --resting_pressure > 0. By default, the value of this parameter is 0 psi, meaning that the inactive nozzle will not extrude any ink. This is particularly relevant for working with nozzles with small inner diameters, in which ink is much more likely to rapidly dry.
 
 ## Tolerancing
 
