@@ -61,6 +61,8 @@ Nordson provides a list of nozzle dimensions here: https://www.nordson.com/en/pr
 
 To generate g-code for a network which distinguishes between arterial and venous vessels, turn on the "multimaterial" option by specifying "1" for the --multimaterial option in the command line. To turn off the multimaterial feature, specify "0" in the command line.
 
+Printing in multi-material mode requires the user to supply custom g-code. X-CAVATE will not produce multi-material g-code without input custom g-code files (see above).
+
 ## Custom G-code
 
 Users must specify at the command line whether they are including custom g-code for adaptation to their own printer hardware/software.
