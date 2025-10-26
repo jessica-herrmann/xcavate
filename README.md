@@ -67,6 +67,12 @@ Printing in multi-material mode requires the user to supply custom g-code. X-CAV
 
 Users must specify at the command line whether they are including custom g-code for adaptation to their own printer hardware/software.
 
+## Type of Printing (Extrusion- vs Pressure-Based)
+
+X-CAVATE allows printing with either extrusion-based or pressure-based 3D printers. To specify which type of printer you have, use the --printer_type parameter.
+
+Pressure-based printers require specification of active and resting perssures. Extrusion-based printers do not.
+
 # Optional Parameters
 
 ## Gap Closure
