@@ -123,6 +123,7 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | tolerance_flag | Include tolerance? | 1=Yes, 0=No |
 | nozzle_diameter | Nozzle outer diameter (mm) |  |
 | container_height | Height of the print container (mm) | |
+| amount_up | Amount above container_height by which to raise nozzle(s) in z-direction before translating between print passes or between active/inactive nozzles (mm) | 10 |
 | num_decimals | Number of decimals places for rounding output values | |
 | speed_calc | Compute print speeds for changing radii? | 1=Yes, 0=No |
 | plots | Generate plots of network print paths? | 1=Yes, 0=No |
@@ -154,7 +155,6 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | offset_x | Distance between the printhead nozzles in x, i.e., x-offset (mm) | 103 |
 | offset_y | Distance between the printhead nozzles in y, i.e., y-offset (mm) | 0.5 |
 | front_nozzle | 1 if venous nozzle (right printhead) is in front of arterial (left printhead), 2 if behind | 1 |
-| amount_up | Amount to raise nozzles in z-direction before switching between active/inactive nozzles (mm) | 10 |
 | num_overlap | Number of nodes by which to overlap segments (for gap closure) | 0 |
 | close_sm | Providing an additional gap closure file (single material)? 1=Yes, 0=No | 0 |
 | close_mm | Providing an additional gap closure file (multimaterial)? 1=Yes, 0=No | 0 |
