@@ -71,7 +71,7 @@ Users must specify at the command line whether they are including custom g-code 
 
 X-CAVATE allows printing with either extrusion-based or pressure-based 3D printers. To specify which type of printer you have, use the --printer_type parameter.
 
-Pressure-based printers require specification of active and resting perssures. Extrusion-based printers do not.
+Pressure-based printers require specification of active and resting pressures. Extrusion-based printers do not.
 
 # Optional Parameters
 
