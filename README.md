@@ -20,11 +20,10 @@ These files are contained within the "inputs/custom" folder, and must be updated
 | start_extrusion_code.txt | Custom g-code for starting extrusion and dwelling (single material) |
 | stop_extrusion_code.txt | Custom g-code for stopping extrusion and dwelling (single material) |
 | start_extrusion_printhead1.txt | Custom g-code for starting extrusion of printhead 1 and dwelling (multimaterial) |
-| start_extrusion_axis1.txt | Custom g-code for starting extrusion of axis 1 and dwelling (multimaterial) |
 | stop_extrusion_printhead1.txt | Custom g-code for stopping extrusion of printhead 1 and dwelling (multimaterial) |
-| stop_extrusion_printhead1.txt | Custom g-code for stopping extrusion of printhead 1 and dwelling (multimaterial) |
+| stop_extrusion_printhead2.txt | Custom g-code for stopping extrusion of printhead 2 and dwelling (multimaterial) |
 | active_pressure_printhead1.txt | Custom g-code for setting the pressure for extrusion when printhead 1 is the active nozzle |
-| active_pressure_printhead1.txt | Custom g-code for setting the pressure for extrusion when printhead 2 is the active nozzle |
+| active_pressure_printhead2.txt | Custom g-code for setting the pressure for extrusion when printhead 2 is the active nozzle |
 | rest_pressure_printhead1.txt | Custom g-code for setting the resting pressure for extrusion when printhead 1 is the resting nozzle |
 | rest_pressure_printhead2.txt | Custom g-code for setting the resting pressure for extrusion when printhead 2 is the resting nozzle |
 
@@ -61,11 +60,9 @@ Nordson provides a list of nozzle dimensions here: https://www.nordson.com/en/pr
 
 To generate g-code for a network which distinguishes between arterial and venous vessels, turn on the "multimaterial" option by specifying "1" for the --multimaterial option in the command line. To turn off the multimaterial feature, specify "0" in the command line.
 
-Printing in multi-material mode requires the user to supply custom g-code. X-CAVATE will not produce multi-material g-code without input custom g-code files (see above).
-
 ## Custom G-code
 
-Users must specify at the command line whether they are including custom g-code for adaptation to their own printer hardware/software.
+Users must specify at the command line whether they are including custom g-code for adaptation to their own printer hardware/software. Without custom g-code, X-CAVATE defaults to multimaterial g-code formatted for the Aerotech 6-axis motion controller and single-material g-code formatted for 
 
 ## Type of Printing (Extrusion- vs Pressure-Based)
 
