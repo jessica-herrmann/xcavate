@@ -158,7 +158,10 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | extrusion_diam | Vessel diameter (mm) for extrusion printing (not using SimVascular radii) | 1 |
 | extrusion_syringe_diam | Syringe diameter (mm) for extrusion printing | 1 |
 | extrusion_factor | Extrusion value multiplier for extrusion printing | 1 |
-
+| extrusion_start_arterial | Extrusion start value for arterial ink in extrusion printing (mm) | 0 |
+| extrusion_start_venous | Extrusion start value for venous ink in extrusion printing (mm) | 0 |
+| extrusion_end_arterial | Extrusion stop value for arterial ink in extrusion printing (mm) | 0 |
+| extrusion_end_venous | Extrusion stop value for venous ink in extrusion printing (mm) | 0 |
 
 # Local Code Setup
 
