@@ -152,7 +152,7 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | active_pressure | Extrusion pressure for active nozzle during multimaterial printing (psi) | 5 |
 | offset_x | Distance between the printhead nozzles in x, i.e., x-offset (mm) | 103 |
 | offset_y | Distance between the printhead nozzles in y, i.e., y-offset (mm) | 0.5 |
-| front_nozzle | 1 if venous nozzle (right printhead) is in front of arterial (left printhead), 2 if behind | 1 |
+| front_nozzle | 1 if venous nozzle (right printhead) is in front of arterial (left printhead), meaning it is physically closer to the user; 2 if behind | 1 |
 | num_overlap | Number of nodes by which to overlap segments (for gap closure) | 0 |
 | close_sm | Providing an additional gap closure file (single material)? 1=Yes, 0=No | 0 |
 | close_mm | Providing an additional gap closure file (multimaterial)? 1=Yes, 0=No | 0 |
