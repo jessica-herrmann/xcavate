@@ -20,6 +20,7 @@ These files are contained within the "inputs/custom" folder, and must be updated
 | start_extrusion_code.txt | Custom g-code for starting extrusion and dwelling (single material) |
 | stop_extrusion_code.txt | Custom g-code for stopping extrusion and dwelling (single material) |
 | start_extrusion_printhead1.txt | Custom g-code for starting extrusion of printhead 1 and dwelling (multimaterial) |
+| start_extrusion_printhead2.txt | Custom g-code for starting extrusion of printhead 2 and dwelling (multimaterial) |
 | stop_extrusion_printhead1.txt | Custom g-code for stopping extrusion of printhead 1 and dwelling (multimaterial) |
 | stop_extrusion_printhead2.txt | Custom g-code for stopping extrusion of printhead 2 and dwelling (multimaterial) |
 | active_pressure_printhead1.txt | Custom g-code for setting the pressure for extrusion when printhead 1 is the active nozzle |
