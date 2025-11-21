@@ -28,6 +28,8 @@ These files are contained within the "inputs/custom" folder, and must be updated
 | rest_pressure_printhead1.txt | Custom g-code for setting the resting pressure for extrusion when printhead 1 is the resting nozzle |
 | rest_pressure_printhead2.txt | Custom g-code for setting the resting pressure for extrusion when printhead 2 is the resting nozzle |
 
+The local folder setup appears as follows:
+
 <img width="589" height="259" alt="xcavate_setup" src="https://github.com/user-attachments/assets/bb1b77cf-ad49-4c33-9056-680e25a7ac44" />
 
 ## Required Format
