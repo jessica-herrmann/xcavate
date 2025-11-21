@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Jessica Herrmann, Skylar-Scott Lab
+# https://github.com/jessica-herrmann/vesselprint | Skylar-Scott Lab
 
-# Last updated: 10.26.25
+# Last updated: 11.19.25
 
 ############################################################### Import: Dependencies ######################################################################
 
@@ -120,7 +120,7 @@ close_var_MM = args.close_mm
 custom_gcode = args.custom
 print_speed = args.print_speed
 printer_type = args.printer_type
-prevent_drying = args.prevent_drying
+#prevent_drying = args.prevent_drying
 
 customJogSpeed = args.jog_speed
 customZJogSpeed = args.jog_speed_lift
@@ -4526,17 +4526,15 @@ if printer_type == 1:
         y = round(points_array[j, 1], numDecimalsOutput)
         z = round(points_array[j, 2], numDecimalsOutput)
         r = round(points_array[j, 3], numDecimalsOutput)
-        # if changing radii
-        if numColumns > 3 and speed_calc == 1:
-          printspeed = radius_speed_SM[j]
-        # if constant radius
-        if speed_calc == 0:
-          printspeed = print_speed
+        
+        # Print speed is constant for extrusion printing
+        printspeed = print_speed
+
         # Start of first print pass
         if j_counter == 0 and i == 0:
           f.write('G90 \n')
           f.write(f';Print pass {i} \n')
-          f.write(f'G92 X{x} Y{y} {printhead1_axis}{z} \n')
+          f.write(f'G92 X{x} Y{y} {printhead1_axis}{z} {printhead_1}{0} \n')
           # Start extrusion
           if custom_gcode == 1:
             f.write('G91 \n')
@@ -5031,37 +5029,37 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
         # Start of first print pass
         if j_counter == 0 and i == 0:
 
-          # Default to arterial axis
-          curr_printhead = printhead_1
-          curr_axis = printhead1_axis
-          other_printhead = printhead_2
-          other_axis = printhead2_axis
-          curr = 1 # arterial
+          # Default to venous axis (extrusion only)
+          curr_printhead = printhead_2
+          curr_axis = printhead2_axis
+          other_printhead = printhead_1
+          other_axis = printhead1_axis
+          curr = 0 # venous
 
-          # If the active printhead is arterial but need venous, move to venous
-          if artven == 0 and curr == 1:
-            curr_printhead = printhead_2
-            curr_axis = printhead2_axis
-            other_printhead = printhead_1
-            other_axis = printhead1_axis
+          # If the active printhead is venous but need arterial, move to arterial
+          if artven == 1 and curr == 0:
+            curr_printhead = printhead_1
+            curr_axis = printhead1_axis
+            other_printhead = printhead_2
+            other_axis = printhead2_axis
             f.write('; Print Pass 0 \n')
-            f.write(f'G92 {printhead1_axis}{z} {printhead2_axis}{z} \n')
-            f.write('; moving to VENOUS \n')
+            f.write(f'G92 {printhead1_axis}{z} {printhead2_axis}{z} {printhead_1}{0} {printhead_2}{0} \n')
+            f.write('; moving to ARTERIAL \n')
 
-            # Switch active printhead to venous and only lower the venous printhead
+            # Switch active printhead to arterial and only lower the arterial printhead
             f.write('G90 \n')
             f.write(f'G1 {printhead1_axis}{containerHeight+amount_up} {printhead2_axis}{containerHeight+amount_up} F{customJogSpeed} \n')
             f.write('G91 \n')
             f.write(f'G1 X-{dist_between_printheads} F{customJogSpeedTranslation} \n')
-            f.write(f'G1 Y{y_offsetToVen} F{customJogSpeedTranslation} \n')
+            f.write(f'G1 Y{y_offsetToArt} F{customJogSpeedTranslation} \n')
             f.write('G90 \n')
             f.write(f'G92 X{x} Y{y} \n')
-            f.write(f'G1 {printhead2_axis}{z} F{customJogSpeed} \n')
+            f.write(f'G1 {printhead1_axis}{z} F{customJogSpeed} \n')
 
             # Start extrusion of curr_printhead (including dwell)
             if custom_gcode == 1:
               f.write('G91 \n')
-              with open(f'{startExtrusionCode_printhead2}','r') as startExtrusionText:
+              with open(f'{startExtrusionCode_printhead1}','r') as startExtrusionText:
                 for line in startExtrusionText:
                   f.write(line)
                 f.write('\n')
@@ -5069,17 +5067,17 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
               plungerPositionV += customExtrusionStartValueV
             curr = 0
 
-          # If the active printhead is arterial, stay on arterial but raise the venous printhead
+          # If the active printhead is venous, stay on venous but raise the arterial printhead
           else:
             f.write('; Print Pass 0 \n')
             f.write(f'G92 X{x} Y{y} {printhead1_axis}{z} {printhead2_axis}{z} \n')
             f.write('G90 \n')
-            f.write(f'G1 {printhead2_axis}{containerHeight+amount_up} F{customJogSpeed} \n')
+            f.write(f'G1 {printhead1_axis}{containerHeight+amount_up} F{customJogSpeed} \n')
 
             # Start extrusion of curr_printhead
             if custom_gcode == 1:
               f.write('G91 \n')
-              with open(f'{startExtrusionCode_printhead1}','r') as startExtrusionText:
+              with open(f'{startExtrusionCode_printhead2}','r') as startExtrusionText:
                 for line in startExtrusionText:
                   f.write(line)
                 f.write('\n')
@@ -5089,13 +5087,22 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
         # Start of each print pass (except first)
         elif j_counter == 0 and i != 0:
         
+          #Initialize overshoot adjustment as zero
+          overshoot_adjustment = np.zeros(3)
+
+          # Check to see if the previous pass has a gap closure segment
+          if (i-1) in gap_pass_MM:
+            
+            # Calculate overshoot by adding deltas for current print pass
+            overshoot_adjustment = np.array([delta_x_MM[gapTracker-1], delta_y_MM[gapTracker-1], delta_z_MM[gapTracker-1]])
+          
           # Obtains the previous node on the previous vessel
           prev_point = print_passes_processed[i-1][-1]
-          prev_x = points_array[prev_point, 0]
-          prev_y = points_array[prev_point, 1]
-          prev_z = points_array[prev_point, 2]
+          prev_x = round(points_array[prev_point, 0] + overshoot_adjustment[0], numDecimalsOutput)
+          prev_y = round(points_array[prev_point, 1] + overshoot_adjustment[1], numDecimalsOutput)
+          prev_z = round(points_array[prev_point, 2] + overshoot_adjustment[2], numDecimalsOutput)
 
-          f.write(f';Print pass {i} \n')
+          f.write(f'; Print pass {i} \n')
 
           if (artven != 0 and curr == 0): # move to arterial if necessary; use != 0 to control for the scaleFactor
             curr_printhead = printhead_1
@@ -5107,7 +5114,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
             f.write(f'; moving to ARTERIAL \n')
             f.write(f'G1 {printhead1_axis}{containerHeight+amount_up} {printhead2_axis}{containerHeight+amount_up} F{customJogSpeed} \n')
             f.write('G91 \n')
-            f.write(f'G1 X{dist_between_printheads} F{customJogSpeedTranslation} \n')
+            f.write(f'G1 X-{dist_between_printheads} F{customJogSpeedTranslation} \n')
             f.write(f'G1 Y{y_offsetToArt} F{customJogSpeed} \n')
             f.write('G90 \n')
             f.write(f'G92 X{prev_x} Y{prev_y} \n')
@@ -5137,7 +5144,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
             f.write('; moving to VENOUS \n')
             f.write(f'G1 {printhead1_axis}{containerHeight+amount_up} {printhead2_axis}{containerHeight+amount_up} F{customJogSpeed} \n')
             f.write('G91 \n')
-            f.write(f'G1 X-{dist_between_printheads} F{customJogSpeedTranslation} \n')
+            f.write(f'G1 X{dist_between_printheads} F{customJogSpeedTranslation} \n')
             f.write(f'G1 Y{y_offsetToVen} F{customJogSpeedTranslation} \n')
             f.write('G90 \n')
             f.write(f'G92 X{prev_x} Y{prev_y} \n')
@@ -5213,20 +5220,18 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
       # Optionally extending the end of the print pass for gap closure
       if close_var_MM == 1 and i in gap_pass_MM:
         #Calculate norm of extension segment
-        norm = np.linalg.norm([delta_x_SM[gapTracker], delta_y_SM[gapTracker], delta_z_SM[gapTracker]])
+        norm = np.linalg.norm([delta_x_MM[gapTracker], delta_y_MM[gapTracker], delta_z_MM[gapTracker]])
 
         # Calculate the extrusion amount using the last value of lineRadius and update the correct plunger position
         extrusionValue = customExtrusionFactor * norm * (lineRadius/customExtrusionSyringeRadius)**2
         if curr_axis == printhead1_axis:
           plungerPositionA += extrusionValue
-          f.write(f'G1 X{x} Y{y} {curr_axis}{z} {curr_printhead}{round(plungerPositionA, numDecimalsOutput)} F{printspeed} \n')
         elif curr_axis == printhead2_axis:
           plungerPositionV += extrusionValue
-          f.write(f'G1 X{x} Y{y} {curr_axis}{z} {curr_printhead}{round(plungerPositionV, numDecimalsOutput)} F{printspeed} \n')
 
         f.write(f';##### Extra segment #####\n')
         f.write('G91 \n')
-        f.write(f'G1 X{round(delta_x_SM[gapTracker], numDecimalsOutput)} Y{round(delta_y_SM[gapTracker], numDecimalsOutput)} {curr_axis}{round(delta_z_SM[gapTracker], numDecimalsOutput)} {curr_printhead}{round(extrusionValue, numDecimalsOutput)} F{printspeed}\n')
+        f.write(f'G1 X{round(delta_x_MM[gapTracker], numDecimalsOutput)} Y{round(delta_y_MM[gapTracker], numDecimalsOutput)} {curr_axis}{round(delta_z_MM[gapTracker], numDecimalsOutput)} {curr_printhead}{round(extrusionValue, numDecimalsOutput)} F{printspeed}\n')
         f.write(f'G90\n')
         f.write(f';########################\n')
         gapTracker += 1
@@ -5253,7 +5258,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
 
       # Raise the current axis to the networkTop
       f.write('G90 \n')
-      f.write(f'G1 {curr_axis}{networkTop} F{customJogSpeed} \n')
+      f.write(f'G1 {curr_axis}{round(networkTop, numDecimalsOutput)} F{customJogSpeed} \n')
 
       if curr == 1:
         f.write(f'; ending on ARTERIAL \n')
@@ -5511,13 +5516,15 @@ x_start = (container_x + left - right) / 2
 y_start = (container_y + forward - backward) / 2
 z_start = (containerHeight - total_z) / 2
 
-print('These instructions assume +x is right, +y is backwards, and +z is upwards.\n')
 print('\n')
 print(f'For a container of dimensions x={container_x} mm, y={container_y} mm, z={containerHeight}mm, center the print by following these instructions.')
 
-print('\nFor SINGLE material:\n')
-print('1. Position nozzle in bottom left corner.')
-print('2. Enter the g-code command: G92 X0 Y0')
+print('\nFor SINGLE material:')
+print('\nIf +x is right, +y is backwards, and +z is upwards (with respect to nozzle\'s movement or relative movement to the printbed):')
+print('1. Position nozzle in left corner of the container, of the container face closest to the observer.')
+print('\nIf +x is left, +y is forwards, and +z is upwards (with respect to nozzle\'s movement or relative movement to the printbed):')
+print('1. Position nozzle in right corner of the container, of the container face farthest from the observer.')
+print('\n2. Enter the g-code command: G92 X0 Y0')
 print(f'3. Move linearly to X{round(x_start,2)} Y{round(y_start,2)} with g-code command: G1 X{round(x_start,2)} Y{round(y_start,2)}')
 print(f'4. Manually maneuver the Z-axis until it is {round(z_start,2)} mm from the bottom of the container.')
 print('5. Press start!')
@@ -5525,21 +5532,21 @@ print('5. Press start!')
 print(f'\nfor MULTIMATERIAL:\n')
 print('If you have not already calibrated, calibrate as below:')
 print('To find the offset in x- and y- between the two nozzles:')
-print(f'1. Position first nozzle (arterial) on the Calibration Tip and enter: G92 X0 Y0 {printhead_1}0')
-print(f'2. Position second nozzle (venous) on the Calibration Tip and enter: G92 {printhead_2}0')
+print(f'1. Position first nozzle (arterial) on the Calibration Tip and enter: G92 X0 Y0 {printhead1_axis}0')
+print(f'2. Position second nozzle (venous) on the Calibration Tip and enter: G92 {printhead2_axis}0')
 print('3. BEFORE MOVING ANYTHING, record the offset between the nozzles in X and Y, which will be the current x- and y-coordinates of the venous nozzle.')
 print('4. Re-run x-cavate, inputting the offsets at the command line as offset_x and offset_y. Use the front_nozzle variable to specify whether the venous nozzle (right printhead) is in front (front_nozzle=1) or behind (front_nozzle=2) the arterial nozzle (left printhead).')
 print('\nTo position for multimaterial printing, after completing the calibration:')
-print('\nIf +x is right, +y is backwards, and +z is upwards:')
+print('\nIf +x is right, +y is backwards, and +z is upwards (with respect to nozzle\'s movement or relative movement to the printbed):')
 print('1. Position first nozzle (arterial) in left corner of the container, of the container face closest to the observer.')
-print('\nIf +x is __, +y is +___, and +z is ___:')
-print('1. Position first nozzle (arterial) in __ corner of the container, of the container face ___ to the observer.')
-print('2. Enter the g-code command: G92 X0 Y0')
+print('\nIf +x is left, +y is forwards, and +z is upwards (with respect to nozzle\'s movement or relative movement to the printbed):')
+print('1. Position second nozzle (venous) in right corner of the container, of the container face farthest from the observer.')
+print('\n2. Enter the g-code command: G92 X0 Y0')
 print(f'3. Enter: G1 X{round(x_start,2)} Y{round(y_start,2)}')
-print(f'4. Enter: G1 {printhead_1}0 {printhead_2}0')
+print(f'4. Enter: G1 {printhead1_axis}0 {printhead2_axis}0')
 print(f'5. Manually maneuver FIRST nozzle until it is {round(z_start,2)} mm from the bottom of the container.')
 print('6. Record the current z-position of FIRST nozzle, and DO NOT RE-ZERO. Will now move the SECOND nozzle to the same z-position.')
-print('7. Enter: G1 {printhead_2}(current position of FIRST nozzle)')
+print(f'7. Enter: G1 {printhead2_axis}(current position of FIRST nozzle)')
 print('8. Just to reiterate... DO NOT RE-ZERO. Both nozzles are now at the correct starting position.')
 print('9. Press start!')
 
