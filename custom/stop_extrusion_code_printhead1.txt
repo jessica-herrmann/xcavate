@@ -1,2 +1,0 @@
-Stop Extrusion Printhead 1 (arterial) - line 1
-Stop Extrusion Printhead 1 (arterial) - line 2

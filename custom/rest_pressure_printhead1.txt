@@ -1,2 +1,0 @@
-Set rest pressure printhead 1 (arterial) - line 1
-Set rest pressure printhead 1 (arterial) - line 2

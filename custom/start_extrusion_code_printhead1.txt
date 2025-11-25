@@ -1,2 +1,0 @@
-Start Extrusion Printhead 1 (arterial) - line 1
-Start Extrusion Printhead 1 (arterial) - line 2

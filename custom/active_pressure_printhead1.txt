@@ -1,2 +1,0 @@
-Set active pressure printhead 1 (arterial) - line 1
-Set active pressure printhead 2 (arterial) - line 2

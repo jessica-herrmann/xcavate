@@ -1,2 +1,0 @@
-Start Extrusion Printhead 2 (venous) - line 1
-Start Extrusion Printhead 2 (venous) - line 2

@@ -1,2 +1,0 @@
-Stop Extrusion Printhead 2 (venous) - line 1
-Stop Extrusion Printhead 2 (venous) - line 2
