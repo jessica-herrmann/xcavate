@@ -1,3 +1,0 @@
-Node1x Node1y Node1z
-Node2x Node2y Node2z
-Node3x Node3y Node3z
