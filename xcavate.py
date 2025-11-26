@@ -2,7 +2,7 @@
 
 # https://github.com/jessica-herrmann/vesselprint | Skylar-Scott Lab
 
-# Last updated: 11.25.25
+# Last updated: 11.26.25
 
 ############################################################### Import: Dependencies ######################################################################
 
@@ -25,6 +25,16 @@ import copy
 
 # Initialize random number generator
 random.seed(0)
+
+############################################################### Output Folders ######################################################################
+
+# Create new directories
+if not os.path.exists('outputs/graph'):
+  os.makedirs('outputs/graph')
+if not os.path.exists('outputs/gcode'):
+  os.makedirs('outputs/gcode')
+if not os.path.exists('outputs/plots'):
+  os.makedirs('outputs/plots')
 
 ###################################################################### Argument Parser ######################################################################
 
@@ -72,7 +82,7 @@ parser.add_argument('--num_overlap', help='Number of nodes by which to overlap s
 # Custom gcode files
 parser.add_argument('--custom', help='Providing custom G-code? 1=Yes, 0=No', type=int, required=True)
 # Positive Ink Displacement vs pressure-based custom printer
-parser.add_argument('--printer_type', help='Type of custom printer? 1=Positive Ink Displacement-based, 0=Pressure-based', type=int, required=True, default=0)
+parser.add_argument('--printer_type', help='Type of custom printer? 2=Aerotech, 1=Positive Ink Displacement-based, 0=Pressure-based', type=int, required=True, default=0)
 # Positive Ink Displacement parameters
 parser.add_argument('--positiveInk_start', help='Extrusion start value for positive ink displacement-based printing (mm)', type=float, required=False, default=0)
 parser.add_argument('--positiveInk_end', help='Extrusion stop value (mm) for positive ink displacement-based printing (mm)', type=float, required=False, default=0)
@@ -181,7 +191,7 @@ convertFactor = 10.0000000000000000
 # Remove blank lines and vessel labels from coordinates
 coord_num_tracker = {}
 counter = -1
-with open(f'{filename}','r') as original, open('preprocessed.txt','w') as preprocessed:
+with open(f'{filename}','r') as original, open('outputs/graph/preprocessed.txt','w') as preprocessed:
     for line in original:
         if line.strip() and line.startswith('Vessel'):
           counter += 1
@@ -196,7 +206,7 @@ for i in range(0, len(coord_num_tracker)):
   coord_num_dict[i] = sum(coord_num_tracker[i])
 
 # Create .txt files for preprocessing the input .txt files
-newfile = open('preprocessed.txt','r')
+newfile = open('outputs/graph/preprocessed.txt','r')
 
 linecount = 0
 with open(f'{inlet_outlet}','r') as inletoutlet:
@@ -212,7 +222,7 @@ with open(f'{inlet_outlet}','r') as inletoutlet:
 # Generate separate .txt files for inlet and outlet coordinates
 inlets = []
 outlets = []
-with open(f'{inlet_outlet}','r') as inletoutlet, open('inlets.txt','w') as inlet_file, open('outlets.txt','w') as outlet_file:
+with open(f'{inlet_outlet}','r') as inletoutlet, open('outputs/graph/inlets.txt','w') as inlet_file, open('outputs/graph/outlets.txt','w') as outlet_file:
   content = inletoutlet.readlines()
   content = [item.rstrip() for item in content]
   for line in range(1,outlet_line_index):
@@ -225,7 +235,7 @@ inlet_file.close()
 outlet_file.close()
 
 # Update filename for preprocessed network
-filename = 'preprocessed.txt'
+filename = 'outputs/graph/preprocessed.txt'
 
 ###################################################################### Import: Vascular Network ######################################################################
 
@@ -261,10 +271,10 @@ numDecimals = len(firstPoint[decimalIndex+1:])
 points_array = points.to_numpy()
 
 # Establish column
-inlets = pd.read_csv('inlets.txt',header=None)
+inlets = pd.read_csv('outputs/graph/inlets.txt',header=None)
 inlets.columns = columnHeaders_inletoutlet
 inlets_array = inlets.to_numpy()
-outlets = pd.read_csv('outlets.txt',header=None)
+outlets = pd.read_csv('outputs/graph/outlets.txt',header=None)
 outlets.columns = columnHeaders_inletoutlet
 outlets_array = outlets.to_numpy()
 
@@ -379,7 +389,7 @@ if plots == 1:
   fig.update_scenes(aspectmode='cube')
 
   # Store output graphs
-  fig.write_html(f'outputs/network_original.html') 
+  fig.write_html(f'outputs/plots/network_original.html') 
 
 # Console output
 print('\nPlotted original network. Now interpolating.')
@@ -750,7 +760,7 @@ for i in branch_dict:
     branchpoint_daughter_dict[j] = []
     branchpoint_daughter_dict[j] = i
 
-with open('special_nodes.txt', 'w') as f:
+with open('outputs/graph/special_nodes.txt', 'w') as f:
 
   # print('\n')
   # print('Keys (branchpoint neighbors):')
@@ -889,7 +899,7 @@ for daughter in repeat_daughters:
 ##### Comment back in to see graph (adjacency structure) #####
 
 
-with open('graph.txt', 'w') as f:
+with open('outputs/graph/graph.txt', 'w') as f:
   f.write('Graph edges:\n\n')
   for i in range(0,len(graph)):
     f.write(str(f'{i}: {graph[i]}'))
@@ -972,7 +982,7 @@ for iteration in range(1):
         i += 1
 
 ##### Initial print passes (pre-subdivision) #####
-with open('changelog.txt', 'w') as f:
+with open('outputs/changelog.txt', 'w') as f:
   # print('\nInitial print passes (post-DFS):')
   f.write('Initial print passes (post-DFS):\n\n')
   for i in print_passes:
@@ -1077,7 +1087,7 @@ for i in print_passes_processed:
 # Print subdivided print passes, a.k.a. "processed print passes" (prior to closing any gaps)
 print('\nSubdivision completed.')
 
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('######################################################################')
   f.write('\n\nSubdivided print passes:\n\n')
   for i in print_passes_processed:
@@ -1126,7 +1136,7 @@ for i in processed_endpoints:
   if processed_endpoints.count(i) == 1:
     disconnected.append(i)
 
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write(f'\nPotentially disconnected: {disconnected}\n\n')
 f.close()
 
@@ -1294,7 +1304,7 @@ for i in (still_check):
       if neighbor_to_connect[node][0] == next_node:
         # if node is first node of pass and next_node is last node of pass
         if (node == print_passes_processed[i][0]) and (next_node == print_passes_processed[i][-1]):
-          with open('changelog.txt', 'a') as f:
+          with open('outputs/changelog.txt', 'a') as f:
             f.write(f'for print pass {i}, not going to append {next_node} to {node} at start of pass because {node} will get appended to last node {next_node}.')
             f.write('\n')
           f.close()
@@ -1310,7 +1320,7 @@ for i in to_pop_disconnects:
 
 
 # Print summary table of remaining disconnected nodes
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\n')
   f.write('Summary of remaining disconnects:                         Join to:')
   f.write('\n-----------------------------------------------------     --------------------')
@@ -1325,7 +1335,7 @@ f.close()
 # Output
 print('\n')
 print('Now running Condition 0.\n')
-with open('changelog.txt','a') as f:
+with open('outputs/changelog.txt','a') as f:
   f.write('\n\nNow running Condition 0.\n')
 f.close()
 
@@ -1414,14 +1424,14 @@ for i in range(1,len(print_passes_processed)):
           # print(f'Branchpoint is {k} associated with branch {associated_branch}; its partner is {partner}')
           # Handle appropriate ordering of the daughter (k)
           if partner == first_node:
-            with open('changelog.txt', 'a') as f:
+            with open('outputs/changelog.txt', 'a') as f:
               #f.write(f'\nBefore branch: NOT appending {k} to start of {i}, immediately preceding {first_node}, because order is {k} <--> {associated_branch} <--> {partner}')
               f.write('')
             f.close()
           else:
             start_append[i] = []
             start_append[i].append(k)
-            with open('changelog.txt', 'a') as f:
+            with open('outputs/changelog.txt', 'a') as f:
               #f.write(f'\nAppending {k} to start of {i}, immediately preceding {first_node}, because order is {k} <--> {associated_branch} <--> {partner}')
               f.write('')
             f.close()
@@ -1435,7 +1445,7 @@ for i in range(1,len(print_passes_processed)):
         else:
           start_append[i] = []
           start_append[i].append(k)
-          with open('changelog.txt', 'a') as f:
+          with open('outputs/changelog.txt', 'a') as f:
             #f.write(f'\nAppending {k} to start of {i}, immediately preceding {first_node}')
             f.write('')
           f.close()
@@ -1459,7 +1469,7 @@ for i in range(1,len(print_passes_processed)):
           # print(f'Branchpoint is {k} associated with branch {associated_branch}; its partner is {partner}')
           # Handle appropriate ordering of the daughter (k)
           if partner == last_node:
-            with open('changelog.txt', 'a') as f:
+            with open('outputs/changelog.txt', 'a') as f:
               #f.write(f'\nBefore branch: NOT appending {k} to end of {i}, immediately following {last_node}, because order is {k} <--> {associated_branch} <--> {partner}')
               f.write('')
             f.close()
@@ -1467,12 +1477,12 @@ for i in range(1,len(print_passes_processed)):
             if already_added_to_single == 0:
               end_append[i] = []
               end_append[i].append(k)
-              with open('changelog.txt', 'a') as f:
+              with open('outputs/changelog.txt', 'a') as f:
                 #f.write(f'\nAppending {k} to end of {i}, immediately following {last_node}, because order is {k} <--> {associated_branch} <--> {partner}')
                 f.write('')
               f.close()
             else:
-              with open('changelog.txt', 'a') as f:
+              with open('outputs/changelog.txt', 'a') as f:
                 #f.write(f'\nNOT appending {k} to end of {i}, immediately following {last_node}, because already added {k} to start of {i}')
                 f.write('')
               f.close()
@@ -1481,12 +1491,12 @@ for i in range(1,len(print_passes_processed)):
           if already_added_to_single == 0:
             end_append[i] = []
             end_append[i].append(k)
-            with open('changelog.txt', 'a') as f:
+            with open('outputs/changelog.txt', 'a') as f:
               #f.write(f'\nAppending {k} to end of {i}, immediately after {last_node}')
               f.write('')
             f.close()
           else:
-            with open('changelog.txt', 'a') as f:
+            with open('outputs/changelog.txt', 'a') as f:
               #f.write(f'\nNOT appending {k} to end of {i}, immediately following {last_node}, because already added {k} to start of {i}')
               f.write('')
             f.close()
@@ -1502,18 +1512,18 @@ for i in range(1,len(print_passes_processed)):
 # Update print_passes_processed
 for i in start_append:
   print_passes_processed[i].insert(0,start_append[i][0]) 
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write(f'\nAppending node {start_append[i][0]} to start of pass {i}.')
   f.close()
 for i in end_append:
   print_passes_processed[i].append(end_append[i][0])
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write(f'\nAppending node {end_append[i][0]} to end of pass {i}.')
   f.close()
 
 # Print output
 print('\nCondition 0 completed.')
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   # Print current list of print_passes_processed
   f.write('\n\nCondition 0 completed.')
   f.write('\n\nCurrent list of print passes: \n\n')
@@ -1673,7 +1683,7 @@ for i in neighbor_locs:
   if (indexnumber == 0) and (len(print_passes_processed[passnumber]) > 0):  # is 0 here for non-empty []
     rightindex = indexnumber+1
     if print_passes_processed[passnumber][rightindex] == neighbor_to_connect[i][0]:
-      with open('changelog.txt', 'a') as f:
+      with open('outputs/changelog.txt', 'a') as f:
         f.write(f'\nNode {neighbor_to_connect[i][0]} not actually disconnected.')
       f.close()
       to_pop_disconnects[i] = []
@@ -1682,7 +1692,7 @@ for i in neighbor_locs:
   if (indexnumber+1 == len(print_passes_processed[passnumber])) and (len(print_passes_processed[passnumber]) > 0):  # is 0 here for non-empty
     leftindex = indexnumber-1
     if print_passes_processed[passnumber][leftindex] == neighbor_to_connect[i][0]:
-      with open('changelog.txt', 'a') as f:
+      with open('outputs/changelog.txt', 'a') as f:
         f.write(f'\nNode {neighbor_to_connect[i][0]} not actually disconnected.')
       f.close()
       to_pop_disconnects[i] = []
@@ -1722,7 +1732,7 @@ for i in (still_check):
       if neighbor_to_connect[node][0] == next_node:
         # if node is first node of pass and next_node is last node of pass
         if (node == print_passes_processed[i][0]) and (next_node == print_passes_processed[i][-1]):
-          with open('changelog.txt', 'a') as f:
+          with open('outputs/changelog.txt', 'a') as f:
             f.write(f'\nfor print pass {i}, not appending {next_node} to {node} at start of pass because {node} will get appended to last node {next_node}.')
           f.close()
           to_pop_disconnects[node] = []
@@ -1736,7 +1746,7 @@ for i in to_pop_disconnects:
   neighbor_index.pop(i)
 
 # Print summary table of remaining disconnected nodes
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\n')
   f.write('Summary of remaining disconnects:                         Join to:')
   f.write('\n-----------------------------------------------------     --------------------')
@@ -1768,7 +1778,7 @@ for i in print_passes_processed:
 
 print('\n\nNow running Branchpoint Condition #1.')
 
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\n\nNow running Branchpoint Condition #1.\n')
 f.close()
 
@@ -1875,12 +1885,12 @@ for i in range(1,len(print_passes_processed)):
 # Update print_passes_processed (BRANCHPOINT CONDITION #1)
 for i in append_first_branch:
   print_passes_processed[i].insert(0,append_first_branch[i]) 
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write(f'\nAppending node {append_first_branch[i]} to start of pass {i}.')
   f.close()
 for i in append_last_branch:
   print_passes_processed[i].append(append_last_branch[i])
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write(f'\nAppending node {append_last_branch[i]} to end of pass {i}.')
   f.close()
 
@@ -1888,7 +1898,7 @@ for i in append_last_branch:
 print('\nBranchpoint Condition #1 completed.')
 
 # Print current list of print_passes_processed
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\nBranchpoint Condition #1 completed.\n')
   f.write('\nCurrent list of print passes: \n\n')
   for i in print_passes_processed:
@@ -2048,7 +2058,7 @@ for i in neighbor_locs:
   if (indexnumber == 0) and (len(print_passes_processed[passnumber]) > 0): # is 0 here for non-empty []
     rightindex = indexnumber+1
     if print_passes_processed[passnumber][rightindex] == neighbor_to_connect[i][0]:
-      with open('changelog.txt', 'a') as f:
+      with open('outputs/changelog.txt', 'a') as f:
         f.write(f'\nNode {neighbor_to_connect[i][0]} not actually disconnected.')
       f.close()
       to_pop_disconnects[i] = []
@@ -2057,7 +2067,7 @@ for i in neighbor_locs:
   if (indexnumber+1 == len(print_passes_processed[passnumber])) and (len(print_passes_processed[passnumber]) > 0):  # is 0 here for non-empty []
     leftindex = indexnumber-1
     if print_passes_processed[passnumber][leftindex] == neighbor_to_connect[i][0]:
-      with open('changelog.txt', 'a') as f:
+      with open('outputs/changelog.txt', 'a') as f:
         f.write(f'\nNode {neighbor_to_connect[i][0]} not actually disconnected.')
       f.close()
       to_pop_disconnects[i] = []
@@ -2100,7 +2110,7 @@ for i in (still_check):
       if neighbor_to_connect[node][0] == next_node:
         # if node is first node of pass and next_node is last node of pass
         if (node == print_passes_processed[i][0]) and (next_node == print_passes_processed[i][-1]):
-          with open('changelog.txt', 'a') as f:
+          with open('outputs/changelog.txt', 'a') as f:
             f.write(f'for print pass {i}, not going to append {next_node} to {node} at start of pass because {node} will get appended to last node {next_node}.')
           f.close()
           to_pop_disconnects[node] = []
@@ -2113,7 +2123,7 @@ for i in to_pop_disconnects:
   neighbor_index.pop(i)
 
 # Print summary table of remaining disconnected nodes
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\n')
   f.write('Summary of remaining disconnects:                         Join to:')
   f.write('\n-----------------------------------------------------     --------------------')
@@ -2130,7 +2140,7 @@ f.close()
 
 print('\nNow running Branchpoint Condition #2.')
 
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\n\nNow running Branchpoint Condition #2.\n')
 f.close()
 
@@ -2227,12 +2237,12 @@ for i in print_passes_processed:
 # Update print_passes_processed (BRANCHPOINT CONDITION #2)
 for i in append_first_branch:
   print_passes_processed[i].insert(0,append_first_branch[i]) 
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write(f'\nAppending node {append_first_branch[i]} to start of pass {i}.')
   f.close()
 for i in append_last_branch:
   print_passes_processed[i].append(append_last_branch[i])
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write(f'\nAppending node {append_last_branch[i]} to end of pass {i}.')
   f.close()
 
@@ -2240,7 +2250,7 @@ for i in append_last_branch:
 print('\nBranchpoint Condition #2 completed.')
 
 # Print updated passes (BRANCHPOINT CONDITION #2)
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\n\nBranchpoint Condition #2 completed.\n')
   f.write('\nCurrent list of print passes: \n')
   for i in print_passes_processed:
@@ -2400,7 +2410,7 @@ for i in neighbor_locs:
   if (indexnumber == 0) and (len(print_passes_processed[passnumber]) > 0):  # is 0 here for non-empty []
     rightindex = indexnumber+1
     if print_passes_processed[passnumber][rightindex] == neighbor_to_connect[i][0]:
-      with open('changelog.txt', 'a') as f:
+      with open('outputs/changelog.txt', 'a') as f:
         f.write(f'{neighbor_to_connect[i][0]} not actually disconnected.')
       f.close()
       to_pop_disconnects[i] = []
@@ -2409,7 +2419,7 @@ for i in neighbor_locs:
   if (indexnumber+1 == len(print_passes_processed[passnumber])) and (len(print_passes_processed[passnumber]) > 0):  # is 0 here for non-empty []
     leftindex = indexnumber-1
     if print_passes_processed[passnumber][leftindex] == neighbor_to_connect[i][0]:
-      with open('changelog.txt', 'a') as f:
+      with open('outputs/changelog.txt', 'a') as f:
         f.write(f'{neighbor_to_connect[i][0]} not actually disconnected.')
       f.close()
       to_pop_disconnects[i] = []
@@ -2449,7 +2459,7 @@ for i in (still_check):
       if neighbor_to_connect[node][0] == next_node:
         # if node is first node of pass and next_node is last node of pass
         if (node == print_passes_processed[i][0]) and (next_node == print_passes_processed[i][-1]):
-          with open('changelog.txt', 'a') as f:
+          with open('outputs/changelog.txt', 'a') as f:
             f.write(f'for print pass {i}, not going to append {next_node} to {node} at start of pass because {node} will get appended to last node {next_node}.')
           f.close()
           to_pop_disconnects[node] = []
@@ -2464,7 +2474,7 @@ for i in to_pop_disconnects:
 
 
 # Print summary table of remaining disconnected nodes
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\n')
   f.write('Summary of remaining disconnects:                         Join to:')
   f.write('\n-----------------------------------------------------     --------------------')
@@ -2481,7 +2491,7 @@ f.close()
 
 print('\nNow running Branchpoint Condition #3.')
 
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\n\nNow running Branchpoint Condition #3.')
 f.close()
 
@@ -2541,12 +2551,12 @@ for i in range(1,len(print_passes_processed)):
 # Update print_passes (BRANCHPOINT CONDITION #3)
 for i in append_start:
   print_passes_processed[i].insert(0,append_start[i][0])
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write(f'\nAppending node {append_start[i][0]} to start of pass {i}.')
   f.close()
 for i in append_end:
   print_passes_processed[i].append(append_end[i][0])
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write(f'\nAppending node {append_end[i][0]} to end of pass {i}.')
   f.close()
 
@@ -2554,7 +2564,7 @@ for i in append_end:
 print('\nBranchpoint Condition #3 completed.')
 
 # Print updated print passes
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\n\nBranchpoint Condition #3 completed.\n')
   f.write(f'\nCurrent list of print passes:\n\n')
   for passNum in print_passes_processed:
@@ -2716,7 +2726,7 @@ for i in neighbor_locs:
   if (indexnumber == 0) and (len(print_passes_processed[passnumber]) > 0):  # is 0 here for non-empty []
     rightindex = indexnumber+1
     if print_passes_processed[passnumber][rightindex] == neighbor_to_connect[i][0]:
-      with open('changelog.txt', 'a') as f:
+      with open('outputs/changelog.txt', 'a') as f:
         f.write(f'\n{neighbor_to_connect[i][0]} not actually disconnected.')
       f.close()
       to_pop_disconnects[i] = []
@@ -2725,7 +2735,7 @@ for i in neighbor_locs:
   if (indexnumber+1 == len(print_passes_processed[passnumber])) and (len(print_passes_processed[passnumber]) > 0):  # is 0 here for non-empty []
     leftindex = indexnumber-1
     if print_passes_processed[passnumber][leftindex] == neighbor_to_connect[i][0]:
-      with open('changelog.txt', 'a') as f:
+      with open('outputs/changelog.txt', 'a') as f:
         f.write(f'\n{neighbor_to_connect[i][0]} not actually disconnected.')
       f.close()
       to_pop_disconnects[i] = []
@@ -2766,7 +2776,7 @@ for i in (still_check):
       if neighbor_to_connect[node][0] == next_node:
         # if node is first node of pass and next_node is last node of pass
         if (node == print_passes_processed[i][0]) and (next_node == print_passes_processed[i][-1]):
-          with open('changelog.txt', 'a') as f:
+          with open('outputs/changelog.txt', 'a') as f:
             f.write(f'\nfor print pass {i}, not going to append {next_node} to {node} at start of pass because {node} will get appended to last node {next_node}.')
           f.close()
           to_pop_disconnects[node] = []
@@ -2779,7 +2789,7 @@ for i in to_pop_disconnects:
   neighbor_index.pop(i)
 
 # Print summary table of remaining disconnected nodes
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\n')
   f.write('Summary of remaining disconnects:                         Join to:')
   f.write('\n-----------------------------------------------------     --------------------')
@@ -2794,7 +2804,7 @@ f.close()
 ######################################################## Final Gap Closure ###########################################################
 
 
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\n\nNow running Final Gap Closure.\n')
 f.close()
 
@@ -2841,12 +2851,12 @@ for i in final_true_disconnect:
 # Update print_passes_processed (final gaps)
 for i in start_append:
   print_passes_processed[i].insert(0,start_append[i][0])
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write(f'\nAppending node {start_append[i][0]} to start of pass {i}.')
   f.close()
 for i in end_append:
   print_passes_processed[i].append(end_append[i][0])
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write(f'\nAppending node {end_append[i][0]} to end of pass {i}.')
   f.close()
 
@@ -3012,7 +3022,7 @@ for i in neighbor_locs:
   if (indexnumber == 0) and (len(print_passes_processed[passnumber]) > 0):  # is 0 here for non-empty []
     rightindex = indexnumber+1
     if print_passes_processed[passnumber][rightindex] == neighbor_to_connect[i][0]:
-      with open('changelog.txt', 'a') as f:
+      with open('outputs/changelog.txt', 'a') as f:
         f.write(f'\n{neighbor_to_connect[i][0]} not actually disconnected.')
       f.close()
       to_pop_disconnects[i] = []
@@ -3021,7 +3031,7 @@ for i in neighbor_locs:
   if (indexnumber+1 == len(print_passes_processed[passnumber])) and (len(print_passes_processed[passnumber]) > 0):  # is 0 here for non-empty []
     leftindex = indexnumber-1
     if print_passes_processed[passnumber][leftindex] == neighbor_to_connect[i][0]:
-      with open('changelog.txt', 'a') as f:
+      with open('outputs/changelog.txt', 'a') as f:
         f.write(f'\n{neighbor_to_connect[i][0]} not actually disconnected.')
       f.close()
       to_pop_disconnects[i] = []
@@ -3067,7 +3077,7 @@ for i in (still_check):
       if neighbor_to_connect[node][0] == next_node:
         # if node is first node of pass and next_node is last node of pass
         if (node == print_passes_processed[i][0]) and (next_node == print_passes_processed[i][-1]):
-          with open('changelog.txt', 'a') as f:
+          with open('outputs/changelog.txt', 'a') as f:
             f.write(f'\nfor print pass {i}, not going to append {next_node} to {node} at start of pass because {node} will get appended to last node {next_node}.')
           f.close()
           to_pop_disconnects[node] = []
@@ -3093,7 +3103,7 @@ to_remove = []
 for i in print_passes_processed:
   if print_passes_processed[i][0] == (arbitrary_val):
     to_remove.append(i)
-    with open('changelog.txt', 'a') as f:
+    with open('outputs/changelog.txt', 'a') as f:
       f.write('\nRemoving non-relevant pass (artifact from processing) {i}.')
     f.close()
 
@@ -3111,14 +3121,14 @@ for i in print_passes_processed_copy:
 # Print output
 print('\nFinal Gap Closure completed.\n')
 
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\n\nFinal Gap Closure completed.\n')
 f.close()
 
 ############################################
 
 # Print summary table of remaining disconnected nodes
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\n')
   f.write('Summary of remaining disconnects:                         Join to:')
   f.write('\n-----------------------------------------------------     --------------------')
@@ -3135,7 +3145,7 @@ f.close()
 
 
 # Outputting the final processed print passes to the changelog
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   # Print final print passes
   f.write('\n\nFinal print passes, single material (before any downsampling or overlapping):\n\n')
   for passNum in print_passes_processed:
@@ -3143,7 +3153,7 @@ with open('changelog.txt', 'a') as f:
     f.write('\n\n')
 f.close()
 
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\nNow plotting final print passes (single material) - saved to outputs folder.\n')
 f.close()
 
@@ -3202,7 +3212,7 @@ if plots == 1:
   fig.update_scenes(aspectmode='cube')
 
   # Store output graphs
-  fig.write_html(f'outputs/network_SM.html') 
+  fig.write_html(f'outputs/plots/network_SM.html') 
 
 ############################################### Optional: downsampling to decrease print resolution ###############################################
 
@@ -3302,7 +3312,7 @@ if plots == 1 and downsample == 1:
 
 ################################################## Preserve print passes for single material ############################################
 
-with open('changelog.txt', 'a') as f:
+with open('outputs/changelog.txt', 'a') as f:
   f.write('\nNow copying print_passes_processed to print_passes_processed_SM.\n')
 f.close()
 
@@ -3321,7 +3331,7 @@ if multimaterial == 1:
     print_passes_processed_artven[i] = []
     for j in print_passes_processed[i]:
       print_passes_processed_artven[i].append(points_array[j, 4])
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write('\n################################################################################')
     f.write('\n\nVessel types within each print pass:\n')
     for i in print_passes_processed_artven:
@@ -3335,7 +3345,7 @@ if multimaterial == 1:
   print_passes_processed_artven_predivis = print_passes_processed_artven
   print_passes_processed_predivis = print_passes_processed
 
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write('\n\nNow swapping vessel types for these cases:')
     f.write('\n1. The vessel type of the first node in the pass differs from the vessel type of the following nodes.')
     f.write('\n2. The vessel type of the last node in the pass differs from the vessel type of the preceding nodes.')
@@ -3363,7 +3373,7 @@ if multimaterial == 1:
             #print(f'next_node_artven is {next_node_artven}')     
             print_passes_processed_artven[i][j] = next_node_artven
             #print(f'curr_node_artven was {curr_node_artven} and is now {print_passes_processed_artven[i][j]}.')
-            with open('changelog.txt', 'a') as f:
+            with open('outputs/changelog.txt', 'a') as f:
               f.write(f'\nNode {j} in pass {i} was swapped from {curr_node_artven} to {print_passes_processed_artven[i][j]}.')         
             f.close()  
         # if last node in pass
@@ -3379,7 +3389,7 @@ if multimaterial == 1:
             #print(f'next_node_artven is {next_node_artven}')        
             print_passes_processed_artven[i][j] = prev_node_artven
             #print(f'curr_node_artven was {curr_node_artven} and is now {print_passes_processed_artven[i][j]}.')
-            with open('changelog.txt', 'a') as f:
+            with open('outputs/changelog.txt', 'a') as f:
               f.write(f'\nNode {j} in pass {i} was swapped from {curr_node_artven} to {print_passes_processed_artven[i][j]}.')
             f.close()            
         # If neither first nor last node in pass 
@@ -3394,7 +3404,7 @@ if multimaterial == 1:
             #print(f'next_node_artven is {next_node_artven}')
             print_passes_processed_artven[i][j] = prev_node_artven
             #print(f'curr_node_artven was {curr_node_artven} and is now {print_passes_processed_artven[i][j]}.')
-            with open('changelog.txt', 'a') as f:
+            with open('outputs/changelog.txt', 'a') as f:
               f.write(f'\nNode {j} in pass {i} was swapped from {curr_node_artven} to {print_passes_processed_artven[i][j]}.')    
             f.close()       
       # If only 2 nodes in the print pass
@@ -3402,7 +3412,7 @@ if multimaterial == 1:
         # If the two nodes are not the same vessel type, set them as the same
         if print_passes_processed_artven[0] != print_passes_processed_artven[1]:
           print_passes_processed_artven[0] == print_passes_processed_artven[1]
-          with open('changelog.txt', 'a') as f:
+          with open('outputs/changelog.txt', 'a') as f:
             f.write(f'\nNode {print_passes_processed[i][j]} in pass {i} was swapped from {print_passes_processed_artven[0]} to {print_passes_processed_artven[1]}.')
           f.close()
         continue
@@ -3412,7 +3422,7 @@ if multimaterial == 1:
 
 
   # Print output
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write('\n')
     f.write('\nFollowing swapping, the vessel types of the print passes are:\n')
     for i in print_passes_processed_artven:
@@ -3581,7 +3591,7 @@ if multimaterial == 1:
   print_passes_processed_artven = print_passes_processed_final_artven
 
   # Print output
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write('\n\nSubdivided multi-material passes (vessel type): \n')
     for i in print_passes_processed_artven:
       f.write(f'\nPass {i}\n')
@@ -3589,7 +3599,7 @@ if multimaterial == 1:
       f.write('\n')
   f.close()
 
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write('\n\nSubdivided multi-material passes (nodes): \n\n')
     for i in print_passes_processed:
       f.write(f'\nPass {i}\n')
@@ -3601,7 +3611,7 @@ if multimaterial == 1:
   # it will NOT print this way - this is because the code repeats shared endnodes where necessary to 
   # avoid gaps.
 
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     f.write('\nThe vessel types, by print pass, are as follows:')
     for i in print_passes_processed_artven:
       if print_passes_processed_artven[i][-1] != 0:
@@ -3680,7 +3690,7 @@ if plots == 1 and multimaterial == 1:
   fig.update_scenes(aspectmode='cube')
 
   # Store output graphs
-  fig.write_html(f'outputs/network_MM.html') 
+  fig.write_html(f'outputs/plots/network_MM.html') 
 
   print('\nFinished plotting passes for multi-material network.')
 
@@ -3729,7 +3739,7 @@ if num_overlap != 0:
 
   # Find the print passes which end on a previously-printed node
   keepTrack = 0
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     for i in print_passes_processed_SM:
       f.write(f'i={i}\n')
       if keepTrack == 0: # check all passes after the first one
@@ -3742,7 +3752,7 @@ if num_overlap != 0:
         for j in print_passes_processed_SM:
           for k in print_passes_processed_SM[j]:
             if k == check_last_node and i != j and i>j:
-              #with open('changelog.txt', 'a') as f:
+              #with open('outputs/changelog.txt', 'a') as f:
               f.write(f'Node {check_last_node} in Pass {i} appears in previously-printed Pass {j}.\n')
               pass_ends_on_shared.append(i)
               pass_with_shared.append(j)
@@ -3787,7 +3797,7 @@ if num_overlap != 0:
   f.close()
 
 
-  with open('changelog.txt', 'a') as f:
+  with open('outputs/changelog.txt', 'a') as f:
     # Print final print passes
     f.write('\n\nFinal single material print passes (after overlap applied):\n\n')
     for passNum in print_passes_processed_SM:
@@ -3805,7 +3815,7 @@ if close_var_SM == 1:
   with open(f'{gap_file_SM}','r') as gapfile:
     gap_pass_SM = gapfile.readlines()
     gap_pass_SM = [int(item.rstrip()) for item in gap_pass_SM]
-    with open ('changelog.txt','a') as f:
+    with open ('outputs/changelog.txt','a') as f:
       f.write(f'\nExtend SM {gap_pass_SM}')
       f.close()
   f.close()
@@ -3821,10 +3831,10 @@ if close_var_SM == 1:
       delta_x_SM.append(int_delta[0])
       delta_y_SM.append(int_delta[1])
       delta_z_SM.append(int_delta[2])
-      with open('changelog.txt','a') as f:
+      with open('outputs/changelog.txt','a') as f:
         f.write(f'\nFloat{int_delta}')
         f.close()
-    with open('changelog.txt','a') as f:
+    with open('outputs/changelog.txt','a') as f:
       f.write(f'\nDelta_x_SM{delta_x_SM}')
       f.write(f'\nDelta_y_SM{delta_y_SM}')
       f.write(f'\nDelta_z_SM{delta_z_SM}')
@@ -3840,7 +3850,7 @@ if close_var_MM == 1:
   with open(f'{gap_file_MM}','r') as gapfile:
     gap_pass_MM = gapfile.readlines()
     gap_pass_MM = [int(item.rstrip()) for item in gap_pass_MM]
-    with open ('changelog.txt','a') as f:
+    with open ('outputs/changelog.txt','a') as f:
       f.write(f'\nExtend MM {gap_pass_MM}')
       f.close()
   f.close()
@@ -3856,10 +3866,10 @@ if close_var_MM == 1:
       delta_x_MM.append(int_delta[0])
       delta_y_MM.append(int_delta[1])
       delta_z_MM.append(int_delta[2])
-      with open('changelog.txt','a') as f:
+      with open('outputs/changelog.txt','a') as f:
         f.write(f'\nFloat{int_delta}')
         f.close()
-    with open('changelog.txt','a') as f:
+    with open('outputs/changelog.txt','a') as f:
       f.write(f'\nDelta_x_MM{delta_x_MM}')
       f.write(f'\nDelta_y_MM{delta_y_MM}')
       f.write(f'\nDelta_z_MM{delta_z_MM}')
@@ -3882,7 +3892,7 @@ if multimaterial == 1:
 
     # Find the print passes which end on a previously-printed node
     keepTrack = 0
-    with open('changelog.txt', 'a') as f:
+    with open('outputs/changelog.txt', 'a') as f:
       for i in print_passes_processed:
         f.write(f'i={i}\n')
         if keepTrack == 0: # check all passes after the first one
@@ -3895,7 +3905,7 @@ if multimaterial == 1:
           for j in print_passes_processed:
             for k in print_passes_processed[j]:
               if k == check_last_node and i != j and i>j:
-                #with open('changelog.txt', 'a') as f:
+                #with open('outputs/changelog.txt', 'a') as f:
                 f.write(f'Node {check_last_node} in Pass {i} appears in previously-printed Pass {j}.\n')
                 pass_ends_on_shared.append(i)
                 pass_with_shared.append(j)
@@ -3940,7 +3950,7 @@ if multimaterial == 1:
     f.close()
 
 
-    with open('changelog.txt', 'a') as f:
+    with open('outputs/changelog.txt', 'a') as f:
       # Print final print passes
       f.write('\n\nFinal multimaterial print passes (after overlap applied):\n\n')
       for passNum in print_passes_processed:
@@ -4006,7 +4016,7 @@ if plots == 1 and num_overlap != 0:
   fig.update_scenes(aspectmode='cube')
 
   # Store output graphs
-  fig.write_html(f'outputs/network_SM_overlap.html') 
+  fig.write_html(f'outputs/graph/network_SM_overlap.html') 
 
 
 ########################################### Optional Plot: Final Print Passes (Arterial vs. Venous) (Overlap) ##########################################
@@ -4088,14 +4098,14 @@ for i in range(0,len(print_passes_processed_SM)):
       x.append(round(points_array[j, 0], numDecimalsOutput))
   x_strings = [str(number) for number in x]
   if i == 0:
-    with open('x_coordinates_SM.txt', 'w') as f:
+    with open('outputs/graph/x_coordinates_SM.txt', 'w') as f:
       f.write(f'Pass {i} \n')
       for line in x_strings:
         f.write(line)
         f.write('\n')
       f.close()
   else:
-    with open('x_coordinates_SM.txt', 'a') as f:
+    with open('outputs/graph/x_coordinates_SM.txt', 'a') as f:
       f.write('\n')
       f.write(f'\nPass {i} \n')
       f.write('\n'.join(x_strings))
@@ -4112,14 +4122,14 @@ for i in range(0,len(print_passes_processed_SM)):
       y.append(round(points_array[j, 1], numDecimalsOutput))
   y_strings = [str(number) for number in y]
   if i == 0:
-    with open('y_coordinates_SM.txt', 'w') as f:
+    with open('outputs/graph/y_coordinates_SM.txt', 'w') as f:
       f.write(f'Pass {i}\n')
       for line in y_strings:
         f.write(line)
         f.write('\n')
       f.close()
   else:
-    with open('y_coordinates_SM.txt', 'a') as f:
+    with open('outputs/graph/y_coordinates_SM.txt', 'a') as f:
       f.write(f'\nPass {i}\n')
       f.write('\n'.join(y_strings))
     f.close()
@@ -4135,14 +4145,14 @@ for i in range(0,len(print_passes_processed_SM)):
       z.append(round(points_array[j, 2], numDecimalsOutput))
   z_strings = [str(number) for number in z]
   if i == 0:
-    with open('z_coordinates_SM.txt', 'w') as f:
+    with open('outputs/graph/z_coordinates_SM.txt', 'w') as f:
       f.write(f'Pass {i}\n')
       for line in z_strings:
         f.write(line)
         f.write('\n')
       f.close()
   else:
-    with open('z_coordinates_SM.txt', 'a') as f:
+    with open('outputs/graph/z_coordinates_SM.txt', 'a') as f:
       f.write(f'\n \nPass {i} \n')
       f.write('\n'.join(z_strings))
     f.close()
@@ -4159,14 +4169,14 @@ if numColumns > 3:
         radius.append(round(points_array[j, 3], numDecimalsOutput))
     radius_strings = [str(number) for number in radius]
     if i == 0:
-      with open('radii_list_SM.txt', 'w') as f:
+      with open('outputs/graph/radii_list_SM.txt', 'w') as f:
         f.write(f'Pass {i}\n')
         for line in radius_strings:
           f.write(line)
           f.write('\n')
         f.close()
     else:
-      with open('radii_list_SM.txt', 'a') as f:
+      with open('outputs/graph/radii_list_SM.txt', 'a') as f:
         f.write(f'\n \nPass {i} \n')
         f.write('\n'.join(radius_strings))
       f.close()
@@ -4183,14 +4193,14 @@ if numColumns == 5:
         vesseltype.append(round(points_array[j, 4], numDecimalsOutput))
     vesseltype_strings = [str(number) for number in vesseltype]
     if i == 0:
-      with open('vesseltype_list_SM.txt', 'w') as f:
+      with open('outputs/graph/vesseltype_list_SM.txt', 'w') as f:
         f.write(f'Pass {i}\n')
         for line in vesseltype_strings:
           f.write(line)
           f.write('\n')
         f.close()
     else:
-      with open('vesseltype_list_SM.txt', 'a') as f:
+      with open('outputs/graph/vesseltype_list_SM.txt', 'a') as f:
         f.write(f'\n \nPass {i} \n')
         f.write('\n'.join(vesseltype_strings))
       f.close()
@@ -4205,14 +4215,14 @@ if numColumns > 3 and speed_calc == 1:
       printspeed.append(round(radius_speed_SM[j], numDecimalsOutput))
     printspeed_strings = [str(number) for number in printspeed]
     if i == 0:
-      with open('printspeed_list_SM.txt', 'w') as f:
+      with open('outputs/graph/printspeed_list_SM.txt', 'w') as f:
         f.write(f'Pass {i}\n')
         for line in printspeed_strings:
           f.write(line)
           f.write('\n')
         f.close()
     else:
-      with open('printspeed_list_SM.txt', 'a') as f:
+      with open('outputs/graph/printspeed_list_SM.txt', 'a') as f:
         f.write(f'\n \nPass {i} \n')
         f.write('\n'.join(printspeed_strings))
       f.close()
@@ -4253,14 +4263,14 @@ if multimaterial == 1:
         x.append(points_array[j, 0])
     x_strings = [f'%.{numDecimalsOutput}f' % number for number in x]
     if i == 0:
-      with open('x_coordinates_MM.txt', 'w') as f:
+      with open('outputs/graph/x_coordinates_MM.txt', 'w') as f:
         f.write(f'Pass {i} \n')
         for line in x_strings:
           f.write(line)
           f.write('\n')
         f.close()
     else:
-      with open('x_coordinates_MM.txt', 'a') as f:
+      with open('outputs/graph/x_coordinates_MM.txt', 'a') as f:
         f.write('\n')
         f.write(f'\nPass {i} \n')
         f.write('\n'.join(x_strings))
@@ -4275,14 +4285,14 @@ if multimaterial == 1:
         y.append(points_array[j, 1])
     y_strings = [f'%.{numDecimalsOutput}f' % number for number in y]
     if i == 0:
-      with open('y_coordinates_MM.txt', 'w') as f:
+      with open('outputs/graph/y_coordinates_MM.txt', 'w') as f:
         f.write(f'Pass {i}\n')
         for line in y_strings:
           f.write(line)
           f.write('\n')
         f.close()
     else:
-      with open('y_coordinates_MM.txt', 'a') as f:
+      with open('outputs/graph/y_coordinates_MM.txt', 'a') as f:
         f.write(f'\nPass {i}\n')
         f.write('\n'.join(y_strings))
       f.close()
@@ -4296,14 +4306,14 @@ if multimaterial == 1:
         z.append(points_array[j, 2])
     z_strings = [f'%.{numDecimalsOutput}f' % number for number in z]
     if i == 0:
-      with open('z_coordinates_MM.txt', 'w') as f:
+      with open('outputs/graph/z_coordinates_MM.txt', 'w') as f:
         f.write(f'Pass {i}\n')
         for line in z_strings:
           f.write(line)
           f.write('\n')
         f.close()
     else:
-      with open('z_coordinates_MM.txt', 'a') as f:
+      with open('outputs/graph/z_coordinates_MM.txt', 'a') as f:
         f.write(f'\n \nPass {i} \n')
         f.write('\n'.join(z_strings))
       f.close()
@@ -4318,14 +4328,14 @@ if multimaterial == 1:
           radius.append(points_array[j, 3])
       radius_strings = [f'%.{numDecimalsOutput}f' % number for number in radius]
       if i == 0:
-        with open('radii_list_MM.txt', 'w') as f:
+        with open('outputs/graph/radii_list_MM.txt', 'w') as f:
           f.write(f'Pass {i}\n')
           for line in radius_strings:
             f.write(line)
             f.write('\n')
           f.close()
       else:
-        with open('radii_list_MM.txt', 'a') as f:
+        with open('outputs/graph/radii_list_MM.txt', 'a') as f:
           f.write(f'\n \nPass {i} \n')
           f.write('\n'.join(radius_strings))
         f.close()
@@ -4340,14 +4350,14 @@ if multimaterial == 1:
           vesseltype.append(points_array[j, 4])
       vesseltype_strings = [f'%.{numDecimalsOutput}f' % number for number in vesseltype]
       if i == 0:
-        with open('vesseltype_list_MM.txt', 'w') as f:
+        with open('outputs/graph/vesseltype_list_MM.txt', 'w') as f:
           f.write(f'Pass {i}\n')
           for line in vesseltype_strings:
             f.write(line)
             f.write('\n')
           f.close()
       else:
-        with open('vesseltype_list_MM.txt', 'a') as f:
+        with open('outputs/graph/vesseltype_list_MM.txt', 'a') as f:
           f.write(f'\n \nPass {i} \n')
           f.write('\n'.join(vesseltype_strings))
         f.close()
@@ -4361,14 +4371,14 @@ if multimaterial == 1:
         printspeed.append(radius_speed_MM[j])
       printspeed_strings = [f'%.{numDecimalsOutput}f' % number for number in printspeed]
       if i == 0:
-        with open('printspeed_list_MM.txt', 'w') as f:
+        with open('outputs/graph/printspeed_list_MM.txt', 'w') as f:
           f.write(f'Pass {i}\n')
           for line in printspeed_strings:
             f.write(line)
             f.write('\n')
           f.close()
       else:
-        with open('printspeed_list_MM.txt', 'a') as f:
+        with open('outputs/graph/printspeed_list_MM.txt', 'a') as f:
           f.write(f'\n \nPass {i} \n')
           f.write('\n'.join(printspeed_strings))
         f.close()
@@ -4403,7 +4413,7 @@ if printer_type == 0:
 
   gapTracker = 0
 
-  with open('gcode_SM_pressure.txt', 'w') as f:
+  with open('outputs/gcode/gcode_SM_pressure.txt', 'w') as f:
 
     # Header
     f.write(';=========== Begin GCODE ============= \n')
@@ -4501,7 +4511,7 @@ if printer_type == 1:
 
   gapTracker = 0
 
-  with open('gcode_SM_positiveInk.txt', 'w') as f:
+  with open('outputs/gcode/gcode_SM_positiveInk.txt', 'w') as f:
 
     # Header
     f.write(';=========== Begin GCODE ============= \n')
@@ -4620,83 +4630,86 @@ if printer_type == 1:
   f.close()
 
 
-############################ Generate g-code (PRINTESS) | SINGLE MATERIAL | CONSTANT OR CHANGING RADII ##################################
+############################ Generate g-code (Aerotech) | SINGLE MATERIAL | CONSTANT OR CHANGING RADII ##################################
 
-gapTracker = 0
+if multimaterial != 1 and custom == 0 and printer_type == 2:
 
-with open('gcode_SM_printess.txt', 'w') as f:
 
-  # Header
-  f.write(';=========== Begin GCODE ============= \n')
+  gapTracker = 0
 
-  print('\n')
+  with open('outputs/gcode/gcode_SM_aerotech.txt', 'w') as f:
 
-  # Network
-  for i in range(0,len(print_passes_processed_SM)):
-    j_counter = 0
-    for j in print_passes_processed_SM[i]: # coordinate of print pass
-      x = points_array[j, 0]
-      y = points_array[j, 1]
-      z = points_array[j, 2]
-      # if changing radii
-      if numColumns > 3 and speed_calc == 1:
-        printspeed = radius_speed_SM[j]
-      # if constant radius
-      if speed_calc == 0:
-        printspeed = print_speed
-      # Start of first print pass
-      if j_counter == 0 and i == 0:
-        f.write('VELOCITY ON \n')
-        f.write('ROUNDING ON \n')
-        f.write('G90 \n')
-        f.write(f'G92 X{x} Y{y} {printhead1_axis}{z} \n')
-        f.write(f'Enable {printhead_1} \n')
-        f.write(f'G90 F{printspeed} \n')
-        f.write(f'BRAKE {printhead_1} 0 \n') # start extrude
-        f.write(f'DWELL {dwell_start} \n')
-        f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed}\n')
-      # Start of each print pass (except first)
-      elif j_counter == 0 and i != 0:
-        f.write(f';Print pass {i} \n')
-        f.write('G90 \n')
-        f.write(f'BRAKE {printhead_1} 1 \n') # stop extrusion
-        f.write(f'G1 X{x} Y{y} \n') # without extrusion
-        f.write('G90 \n')
-        f.write(f'G1 X{x} Y{y} {printhead1_axis}{z}\n')
-        # Start extrusion (code for initial)
-        f.write(f'Enable {printhead_1} \n')
-        f.write('G91 \n')
-        f.write(f'BRAKE {printhead_1} 0 \n') # start extrusion
-        f.write(f'DWELL {dwell_start} \n')
-        f.write('G90 \n')
-        f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed}\n')
-      else:
-        f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed}\n')
-      j_counter += 1
-    # Optionally extending the end of the print pass for gap closure
-    if close_var_SM == 1 and i in gap_pass_SM:
-      f.write(f';##### Extra segment #####\n')
-      f.write(f'G91\n')
-      f.write(f'G1 X{delta_x_SM[gapTracker]} Y{delta_y_SM[gapTracker]} {printhead1_axis}{delta_z_SM[gapTracker]} F{printspeed}\n')
-      f.write(f'G90\n')
-      f.write(f';########################\n')
-      gapTracker += 1
-    # End of print pass (stop extrusion)
-    f.write(f'Enable {printhead_1} \n')
-    f.write('G91 \n')
-    f.write(f'DWELL {dwell_end} \n')
-    f.write(f'BRAKE {printhead_1} 1 \n') # stop extrusion
-    f.write(f'G1 {printhead1_axis}{initial_lift} F{customZJogSpeed} \n') # initial nozzle lift
+    # Header
+    f.write(';=========== Begin GCODE ============= \n')
+
+    print('\n')
+
+    # Network
+    for i in range(0,len(print_passes_processed_SM)):
+      j_counter = 0
+      for j in print_passes_processed_SM[i]: # coordinate of print pass
+        x = points_array[j, 0]
+        y = points_array[j, 1]
+        z = points_array[j, 2]
+        # if changing radii
+        if numColumns > 3 and speed_calc == 1:
+          printspeed = radius_speed_SM[j]
+        # if constant radius
+        if speed_calc == 0:
+          printspeed = print_speed
+        # Start of first print pass
+        if j_counter == 0 and i == 0:
+          f.write('VELOCITY ON \n')
+          f.write('ROUNDING ON \n')
+          f.write('G90 \n')
+          f.write(f'G92 X{x} Y{y} {printhead1_axis}{z} \n')
+          f.write(f'Enable {printhead_1} \n')
+          f.write(f'G90 F{printspeed} \n')
+          f.write(f'BRAKE {printhead_1} 0 \n') # start extrude
+          f.write(f'DWELL {dwell_start} \n')
+          f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed}\n')
+        # Start of each print pass (except first)
+        elif j_counter == 0 and i != 0:
+          f.write(f';Print pass {i} \n')
+          f.write('G90 \n')
+          f.write(f'BRAKE {printhead_1} 1 \n') # stop extrusion
+          f.write(f'G1 X{x} Y{y} \n') # without extrusion
+          f.write('G90 \n')
+          f.write(f'G1 X{x} Y{y} {printhead1_axis}{z}\n')
+          # Start extrusion (code for initial)
+          f.write(f'Enable {printhead_1} \n')
+          f.write('G91 \n')
+          f.write(f'BRAKE {printhead_1} 0 \n') # start extrusion
+          f.write(f'DWELL {dwell_start} \n')
+          f.write('G90 \n')
+          f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed}\n')
+        else:
+          f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed}\n')
+        j_counter += 1
+      # Optionally extending the end of the print pass for gap closure
+      if close_var_SM == 1 and i in gap_pass_SM:
+        f.write(f';##### Extra segment #####\n')
+        f.write(f'G91\n')
+        f.write(f'G1 X{delta_x_SM[gapTracker]} Y{delta_y_SM[gapTracker]} {printhead1_axis}{delta_z_SM[gapTracker]} F{printspeed}\n')
+        f.write(f'G90\n')
+        f.write(f';########################\n')
+        gapTracker += 1
+      # End of print pass (stop extrusion)
+      f.write(f'Enable {printhead_1} \n')
+      f.write('G91 \n')
+      f.write(f'DWELL {dwell_end} \n')
+      f.write(f'BRAKE {printhead_1} 1 \n') # stop extrusion
+      f.write(f'G1 {printhead1_axis}{initial_lift} F{customZJogSpeed} \n') # initial nozzle lift
+      f.write('G90 \n')
+      f.write(f'G1 {printhead1_axis}{networkTop} F{customJogSpeed} \n')
+
+
+    # Footer
     f.write('G90 \n')
-    f.write(f'G1 {printhead1_axis}{networkTop} F{customJogSpeed} \n')
+    f.write(f'G1 {printhead1_axis}{containerHeight+amount_up} \n')
+    f.write('M2 \n')
 
-
-  # Footer
-  f.write('G90 \n')
-  f.write(f'G1 {printhead1_axis}{containerHeight+amount_up} \n')
-  f.write('M2 \n')
-
-f.close()
+  f.close()
 
 ############################ # Generate g-code | MULTIMATERIAL (PRESSURE-BASED) | CONSTANT OR CHANGING RADII ##################################
 
@@ -4726,7 +4739,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 0:
     y_offsetToArt = ydist_between_printheads
 
 
-  with open('gcode_MM_pressure.txt', 'w') as f:
+  with open('outputs/gcode/gcode_MM_pressure.txt', 'w') as f:
 
     # Header
     f.write(';=========== Begin GCODE ============= \n')
@@ -4992,7 +5005,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
     y_offsetToVen = ydist_between_printheads
     y_offsetToArt = -ydist_between_printheads
 
-  with open('gcode_MM_positiveInk.txt', 'w') as f:
+  with open('outputs/gcode/gcode_MM_positiveInk.txt', 'w') as f:
 
     # Header
     f.write(';=========== Begin GCODE ============= \n')
@@ -5271,10 +5284,10 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
     
   f.close()
 
-############################ # Generate g-code (PRINTESS) | MULTIMATERIAL | CONSTANT OR CHANGING RADII ##################################
+############################ # Generate g-code (Aerotech) | MULTIMATERIAL | CONSTANT OR CHANGING RADII ##################################
 
 
-if multimaterial == 1 and custom_gcode == 0 and printer_type == 0:
+if multimaterial == 1 and custom_gcode == 0 and printer_type == 2:
 
   gapTracker = 0
 
@@ -5300,7 +5313,7 @@ if multimaterial == 1 and custom_gcode == 0 and printer_type == 0:
     y_offsetToArt = ydist_between_printheads
 
 
-  with open('gcode_MM_printess.txt', 'w') as f:
+  with open('outputs/gcode/gcode_MM_aerotech.txt', 'w') as f:
 
     # Header
     f.write('DVAR $AP, $COM,$hFile,$press,$length,$lame,$cCheck \n')
