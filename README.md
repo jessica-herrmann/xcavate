@@ -129,6 +129,7 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | plots | Generate plots of network print paths? | 1=Yes, 0=No |
 | downsample | Downsample interpolated network? | 1=Yes, 0=No | 
 | custom | Including custom g-code? | 1=Yes, 0=No |
+| printer_type | Type of custom printer? 2=Aerotech, 1=Positive ink displacement, 0=Pressure-based | 0 |
 
 
 <br>
@@ -158,7 +159,6 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | num_overlap | Number of nodes by which to overlap segments (for gap closure) | 0 |
 | close_sm | Providing an additional gap closure file (single material)? 1=Yes, 0=No | 0 |
 | close_mm | Providing an additional gap closure file (multimaterial)? 1=Yes, 0=No | 0 |
-| printer_type | Type of custom printer? 1=Extrusion-based, 0=Pressure-based | 0 |
 | jog_speed | Jog speed (mm/s) | 5 |
 | jog_translation | Jog speed for translating between nozzles in multimaterial mode (mm/s) | 10 |
 | jog_speed_lift | Jog speed for initial nozzle lift (mm/s) | 0.25 |
