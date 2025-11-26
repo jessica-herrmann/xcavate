@@ -129,7 +129,7 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | plots | Generate plots of network print paths? | 1=Yes, 0=No |
 | downsample | Downsample interpolated network? | 1=Yes, 0=No | 
 | custom | Including custom g-code? | 1=Yes, 0=No |
-| printer_type | Type of custom printer? 2=Aerotech, 1=Positive ink displacement, 0=Pressure-based | 0 |
+| printer_type | Type of custom printer? | 2=Aerotech, 1=Positive ink displacement, 0=Pressure-based |
 
 
 <br>
