@@ -2,7 +2,7 @@
 
 # https://github.com/jessica-herrmann/vesselprint | Skylar-Scott Lab
 
-# Last updated: 11.19.25
+# Last updated: 11.25.25
 
 ############################################################### Import: Dependencies ######################################################################
 
@@ -71,20 +71,20 @@ parser.add_argument('--close_mm', help="Providing an additional gap closure file
 parser.add_argument('--num_overlap', help='Number of nodes by which to overlap segments (for gap closure)', type=int, required=False, default=0)
 # Custom gcode files
 parser.add_argument('--custom', help='Providing custom G-code? 1=Yes, 0=No', type=int, required=True)
-# Extrusion vs pressure-based custom printer
-parser.add_argument('--printer_type', help='Type of custom printer? 1=Extrusion-based, 0=Pressure-based', type=int, required=True, default=0)
-# Extrusion parameters
-parser.add_argument('--extrusion_start', help='Extrusion start value for extrusion printing (mm)', type=float, required=False, default=0)
-parser.add_argument('--extrusion_end', help='Extrusion stop value (mm) for extrusion printing (mm)', type=float, required=False, default=0)
-parser.add_argument('--extrusion_radii', help='Use vessel radii for extrusion calculations? 1 = Yes, 0 = No', type=int, required=False, default=0)
-parser.add_argument('--extrusion_diam', help='Vessel diameter (mm) for extrusion printing (not using SimVascular radii)', type=float, required=False, default=1)
-parser.add_argument('--extrusion_syringe_diam', help='Syringe diameter (mm) for extrusion printing', type=float, required=False, default=1)
-parser.add_argument('--extrusion_factor', help='Extrusion value multiplier for extrusion printing', type=float, required=False, default=1)
+# Positive Ink Displacement vs pressure-based custom printer
+parser.add_argument('--printer_type', help='Type of custom printer? 1=Positive Ink Displacement-based, 0=Pressure-based', type=int, required=True, default=0)
+# Positive Ink Displacement parameters
+parser.add_argument('--positiveInk_start', help='Extrusion start value for positive ink displacement-based printing (mm)', type=float, required=False, default=0)
+parser.add_argument('--positiveInk_end', help='Extrusion stop value (mm) for positive ink displacement-based printing (mm)', type=float, required=False, default=0)
+parser.add_argument('--positiveInk_radii', help='Use vessel radii for extrusion calculations? 1 = Yes, 0 = No', type=int, required=False, default=0)
+parser.add_argument('--positiveInk_diam', help='Vessel diameter (mm) for positive ink displacement-based printing (not using SimVascular radii)', type=float, required=False, default=1)
+parser.add_argument('--positiveInk_syringe_diam', help='Syringe diameter (mm) for positive ink displacement-based printing', type=float, required=False, default=1)
+parser.add_argument('--positiveInk_factor', help='Extrusion value multiplier for positive ink displacement-based printing', type=float, required=False, default=1)
 # Multimaterial extrusion parameters
-parser.add_argument('--extrusion_start_arterial', help='Extrusion start value for arterial ink in extrusion printing (mm)', type=float, required=False, default=0)
-parser.add_argument('--extrusion_start_venous', help='Extrusion start value for venous ink in extrusion printing (mm)', type=float, required=False, default=0)
-parser.add_argument('--extrusion_end_arterial', help='Extrusion stop value for arterial ink in extrusion printing (mm)', type=float, required=False, default=0)
-parser.add_argument('--extrusion_end_venous', help='Extrusion stop value for venous ink in extrusion printing (mm)', type=float, required=False, default=0)
+parser.add_argument('--positiveInk_start_arterial', help='Extrusion start value for arterial ink in positive ink displacement-based printing (mm)', type=float, required=False, default=0)
+parser.add_argument('--positiveInk_start_venous', help='Extrusion start value for venous ink in positive ink displacement-based printing (mm)', type=float, required=False, default=0)
+parser.add_argument('--positiveInk_end_arterial', help='Extrusion stop value for arterial ink in positive ink displacement-based printing (mm)', type=float, required=False, default=0)
+parser.add_argument('--positiveInk_end_venous', help='Extrusion stop value for venous ink in positive ink displacement-based printing (mm)', type=float, required=False, default=0)
 
 args = parser.parse_args()
 
@@ -124,19 +124,19 @@ printer_type = args.printer_type
 
 customJogSpeed = args.jog_speed
 customZJogSpeed = args.jog_speed_lift
-customExtrusionStartValue = args.extrusion_start
-customExtrusionStopValue = args.extrusion_end
-customExtrusionLineDiameter = args.extrusion_diam
-customExtrusionSyringeDiameter = args.extrusion_syringe_diam
-customExtrusionFactor = args.extrusion_factor
-useRadiiExtrusion = args.extrusion_radii
+customPositiveInkStartValue = args.positiveInk_start
+customPositiveInkStopValue = args.positiveInk_end
+customPositiveInkLineDiameter = args.positiveInk_diam
+customPositiveInkSyringeDiameter = args.positiveInk_syringe_diam
+customPositiveInkFactor = args.positiveInk_factor
+useRadiiPositiveInk = args.positiveInk_radii
 initial_lift = args.initial_lift
 customJogSpeedTranslation = args.jog_translation
 
-customExtrusionStartValueA = args.extrusion_start_arterial
-customExtrusionStartValueV = args.extrusion_start_venous
-customExtrusionStopValueA = args.extrusion_end_arterial
-customExtrusionStopValueV = args.extrusion_end_venous
+customPositiveInkStartValueA = args.positiveInk_start_arterial
+customPositiveInkStartValueV = args.positiveInk_start_venous
+customPositiveInkStopValueA = args.positiveInk_end_arterial
+customPositiveInkStopValueV = args.positiveInk_end_venous
 
 gap_file_SM = "inputs/pass_to_extend_SM.txt"
 deltas_file_SM = "inputs/deltas_to_extend_SM.txt"
@@ -4221,7 +4221,7 @@ if numColumns > 3 and speed_calc == 1:
 
 
 # Single material (all available columns of information)
-with open('all_coordinates_SM.txt', 'w') as f:
+with open('outputs/graph/all_coordinates_SM.txt', 'w') as f:
   for i in range(0,len(print_passes_processed_SM)):
       f.write(f'Pass {i} \n')
       for j in print_passes_processed_SM[i]:
@@ -4375,7 +4375,7 @@ if multimaterial == 1:
       printspeed_strings = []
 
   # Multimaterial (all available columns of information)
-  with open('all_coordinates_MM.txt', 'w') as f:
+  with open('outputs/graph/all_coordinates_MM.txt', 'w') as f:
     for i in range(0,len(print_passes_processed)):
         f.write(f'Pass {i} \n')
         for j in print_passes_processed[i]:
@@ -4496,12 +4496,12 @@ if printer_type == 0:
 
   f.close()
 
-############################ Generate g-code | SINGLE MATERIAL (EXTRUSION-BASED) | CONSTANT OR CHANGING RADII ##################################
+############################ Generate g-code | SINGLE MATERIAL (POSITIVE INK DISPLACEMENT-BASED) | CONSTANT OR CHANGING RADII ##################################
 if printer_type == 1:
 
   gapTracker = 0
 
-  with open('gcode_SM_extrusion.txt', 'w') as f:
+  with open('gcode_SM_positiveInk.txt', 'w') as f:
 
     # Header
     f.write(';=========== Begin GCODE ============= \n')
@@ -4527,7 +4527,7 @@ if printer_type == 1:
         z = round(points_array[j, 2], numDecimalsOutput)
         r = round(points_array[j, 3], numDecimalsOutput)
         
-        # Print speed is constant for extrusion printing
+        # Print speed is constant for positive ink displacement printing
         printspeed = print_speed
 
         # Start of first print pass
@@ -4543,7 +4543,7 @@ if printer_type == 1:
                 f.write(line)
               f.write('\n')
             f.write('G90 \n')
-            plungerPosition += customExtrusionStartValue
+            plungerPosition += customPositiveInkStartValue
         # Start of each print pass (except first)
         elif j_counter == 0 and i != 0:
           f.write(f';Print pass {i} \n')
@@ -4558,7 +4558,7 @@ if printer_type == 1:
                 f.write(line)
               f.write('\n')
             f.write('G90 \n')
-            plungerPosition += customExtrusionStartValue
+            plungerPosition += customPositiveInkStartValue
         else:
 
           # Previous coordinates (for extrusion calculation)
@@ -4571,15 +4571,15 @@ if printer_type == 1:
           diff = np.array([x-xp, y-yp, z-zp])
           norm = np.linalg.norm(diff)
 
-          if useRadiiExtrusion == 0:
-            lineRadius = customExtrusionLineDiameter/2
-          elif useRadiiExtrusion == 1 and numColumns > 3:
+          if useRadiiPositiveInk == 0:
+            lineRadius = customPositiveInkLineDiameter/2
+          elif useRadiiPositiveInk == 1 and numColumns > 3:
             lineRadius = r
 
-          customExtrusionSyringeRadius = customExtrusionSyringeDiameter/2
+          customPositiveInkSyringeRadius = customPositiveInkSyringeDiameter/2
 
           # Calculate extrusion amount and update the plunger position
-          extrusionValue = customExtrusionFactor * norm * (lineRadius/customExtrusionSyringeRadius)**2
+          extrusionValue = customPositiveInkFactor * norm * (lineRadius/customPositiveInkSyringeRadius)**2
           plungerPosition += extrusionValue
 
           f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} {printhead_1}{round(plungerPosition, numDecimalsOutput)} F{printspeed}\n')
@@ -4592,7 +4592,7 @@ if printer_type == 1:
         norm = np.linalg.norm([delta_x_SM[gapTracker], delta_y_SM[gapTracker], delta_z_SM[gapTracker]])
 
         # Calculate the extrusion amount using the last value of lineRadius and update the plunger position
-        extrusionValue = customExtrusionFactor * norm * (lineRadius/customExtrusionSyringeRadius)**2
+        extrusionValue = customPositiveInkFactor * norm * (lineRadius/customPositiveInkSyringeRadius)**2
         plungerPosition += extrusionValue
 
         f.write(f';##### Extra segment #####\n')
@@ -4609,7 +4609,7 @@ if printer_type == 1:
           for line in stopExtrusionText:
             f.write(line)
           f.write('\n')
-        plungerPosition += customExtrusionStopValue
+        plungerPosition += customPositiveInkStopValue
       f.write(f'G1 {printhead1_axis}{initial_lift} F{customZJogSpeed} \n')
       f.write('G90 \n')
       f.write(f'G1 {printhead1_axis}{networkTop} F{customJogSpeed} \n')
@@ -4965,7 +4965,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 0:
 
   f.close()
 
-############################ Generate g-code | MULTIMATERIAL (EXTRUSION-BASED) | CONSTANT OR CHANGING RADII ##################################
+############################ Generate g-code | MULTIMATERIAL (POSITIVE INK DISPLACEMENT-BASED) | CONSTANT OR CHANGING RADII ##################################
 
 
 if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
@@ -4992,7 +4992,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
     y_offsetToVen = ydist_between_printheads
     y_offsetToArt = -ydist_between_printheads
 
-  with open('gcode_MM_extrusion.txt', 'w') as f:
+  with open('gcode_MM_positiveInk.txt', 'w') as f:
 
     # Header
     f.write(';=========== Begin GCODE ============= \n')
@@ -5064,7 +5064,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
                   f.write(line)
                 f.write('\n')
               f.write('G90 \n')
-              plungerPositionV += customExtrusionStartValueV
+              plungerPositionV += customPositiveInkStartValueV
             curr = 0
 
           # If the active printhead is venous, stay on venous but raise the arterial printhead
@@ -5082,7 +5082,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
                   f.write(line)
                 f.write('\n')
               f.write('G90 \n')
-              plungerPositionA += customExtrusionStartValueA
+              plungerPositionA += customPositiveInkStartValueA
 
         # Start of each print pass (except first)
         elif j_counter == 0 and i != 0:
@@ -5091,7 +5091,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
           overshoot_adjustment = np.zeros(3)
 
           # Check to see if the previous pass has a gap closure segment
-          if (i-1) in gap_pass_MM:
+          if close_var_MM == 1 and (i-1) in gap_pass_MM:
             
             # Calculate overshoot by adding deltas for current print pass
             overshoot_adjustment = np.array([delta_x_MM[gapTracker-1], delta_y_MM[gapTracker-1], delta_z_MM[gapTracker-1]])
@@ -5131,7 +5131,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
                   f.write(line)
                 f.write('\n')
               f.write('G90 \n')
-              plungerPositionA += customExtrusionStartValueA
+              plungerPositionA += customPositiveInkStartValueA
             curr = 1 # update printhead tracker
 
           elif artven == 0 and curr == 1: # move to venous if necessary
@@ -5161,7 +5161,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
                   f.write(line)
                 f.write('\n')
               f.write('G90 \n')
-              plungerPositionV += customExtrusionStartValueV
+              plungerPositionV += customPositiveInkStartValueV
             curr = 0 # update printhead tracker
           
           else: # Active printhead is the desired printhead (e.g., want arterial and arterial is active)
@@ -5176,7 +5176,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
                   f.write(line)
                 f.write('\n')
               f.write('G90 \n')
-              plungerPositionA += customExtrusionStartValueA
+              plungerPositionA += customPositiveInkStartValueA
 
             elif custom_gcode == 1 and curr_axis == printhead2_axis:
               f.write('G91 \n')
@@ -5185,7 +5185,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
                   f.write(line)
                 f.write('\n')
               f.write('G90 \n')
-              plungerPositionV += customExtrusionStartValueV
+              plungerPositionV += customPositiveInkStartValueV
 
         # Every node in the print pass except the first
         else:
@@ -5199,15 +5199,15 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
             diff = np.array([x-xp, y-yp, z-zp])
             norm = np.linalg.norm(diff)
 
-            if useRadiiExtrusion == 0:
-              lineRadius = customExtrusionLineDiameter/2
-            elif useRadiiExtrusion == 1 and numColumns > 3:
+            if useRadiiPositiveInk == 0:
+              lineRadius = customPositiveInkLineDiameter/2
+            elif useRadiiPositiveInk == 1 and numColumns > 3:
               lineRadius = r
 
-            customExtrusionSyringeRadius = customExtrusionSyringeDiameter/2
+            customPositiveInkSyringeRadius = customPositiveInkSyringeDiameter/2
 
             # Calculate extrusion amount and update the correct plunger position
-            extrusionValue = customExtrusionFactor * norm * (lineRadius/customExtrusionSyringeRadius)**2
+            extrusionValue = customPositiveInkFactor * norm * (lineRadius/customPositiveInkSyringeRadius)**2
             if curr_axis == printhead1_axis:
               plungerPositionA += extrusionValue
               f.write(f'G1 X{x} Y{y} {curr_axis}{z} {curr_printhead}{round(plungerPositionA, numDecimalsOutput)} F{printspeed} \n')
@@ -5223,7 +5223,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
         norm = np.linalg.norm([delta_x_MM[gapTracker], delta_y_MM[gapTracker], delta_z_MM[gapTracker]])
 
         # Calculate the extrusion amount using the last value of lineRadius and update the correct plunger position
-        extrusionValue = customExtrusionFactor * norm * (lineRadius/customExtrusionSyringeRadius)**2
+        extrusionValue = customPositiveInkFactor * norm * (lineRadius/customPositiveInkSyringeRadius)**2
         if curr_axis == printhead1_axis:
           plungerPositionA += extrusionValue
         elif curr_axis == printhead2_axis:
@@ -5244,14 +5244,14 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
           for line in stopExtrusionText:
             f.write(line)
           f.write('\n')
-        plungerPositionA += customExtrusionStopValueA
+        plungerPositionA += customPositiveInkStopValueA
 
       elif custom_gcode == 1 and curr_axis == printhead2_axis:
         with open(f'{stopExtrusionCode_printhead2}','r') as stopExtrusionText:
           for line in stopExtrusionText:
             f.write(line)
           f.write('\n')
-        plungerPositionV += customExtrusionStopValueV
+        plungerPositionV += customPositiveInkStopValueV
 
       #Raise the current axis by the lift ammount
       f.write(f'G1 {curr_axis}{initial_lift} F{customZJogSpeed} \n') # initial nozzle lift
