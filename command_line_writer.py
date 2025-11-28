@@ -87,11 +87,11 @@ optionalText = ""
 
 # Iterate through required and optional parameters
 for key, value in required_parameters.items():
-    cmdText += f"{key} --{value} "
+    cmdText += f"--{key} {value} "
 # Remove the trailing comma and space
 cmdText = cmdText.rstrip(', ')
 for key, value in include_optional.items():
-    optionalText += f"{key} --{value} "
+    optionalText += f"--{key} {value} "
 # Remove the trailing comma and space
 optionalText = optionalText.rstrip(', ')
 
