@@ -173,6 +173,16 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | extrusion_start_venous | Extrusion start value for venous ink in extrusion printing (mm) | 0 |
 | extrusion_end_arterial | Extrusion stop value for arterial ink in extrusion printing (mm) | 0 |
 | extrusion_end_venous | Extrusion stop value for venous ink in extrusion printing (mm) | 0 |
+| positiveInk_start | Extrusion start value for positive ink displacement-based printing (mm) | 0 |
+| positiveInk_end | Extrusion stop value (mm) for positive ink displacement-based printing (mm) | 0 |
+| positiveInk_radii | Use vessel radii for extrusion calculations? 1 = Yes, 0 = No | 0 |
+| positiveInk_diam | Vessel diameter (mm) for positive ink displacement-based printing (not using SimVascular radii) | 1 |
+| positiveInk_syringe_diam | Syringe diameter (mm) for positive ink displacement-based printing | 1 |
+| positiveInk_factor | Extrusion value multiplier for positive ink displacement-based printing | 1 |
+| positiveInk_start_arterial |  Extrusion start value for arterial ink in positive ink displacement-based printing (mm) | 0 |
+| positiveInk_start_venous | Extrusion start value for venous ink in positive ink displacement-based printing (mm) | 0 |
+| positiveInk_end_arterial | Extrusion stop value for arterial ink in positive ink displacement-based printing (mm) | 0 |
+| positiveInk_end_venous | Extrusion stop value for venous ink in positive ink displacement-based printing (mm) | 0 |
 
 # Local Code Setup
 
