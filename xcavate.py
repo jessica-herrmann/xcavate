@@ -2,7 +2,7 @@
 
 # https://github.com/jessica-herrmann/vesselprint | Skylar-Scott Lab
 
-# Last updated: 11.26.25
+# Last updated: 11.28.25
 
 ############################################################### Import: Dependencies ######################################################################
 
@@ -5401,10 +5401,10 @@ if multimaterial == 1 and custom_gcode == 0 and printer_type == 2:
             f.write(f'$COM={arterial_COM} \n') # active
             f.write(f'$AP={active_pressure} \n') # active
             f.write('Call setPress P$COM Q$AP \n')
-            f.write(f'G91 G1 {printhead1_axis}{amount_up} {printhead2_axis}{amount_up} F{customJogSpeed} \n') # raise axes 1 and 2
-            f.write(f'G91 G1 X{dist_between_printheads} F{customJogSpeedTranslation} \n')
-            f.write(f'G91 G1 Y{y_offsetToArt} F{customJogSpeed} \n')
-            f.write(f'G91 G1 {printhead1_axis}-{amount_up} {printhead2_axis}-{amount_up} \n')
+            f.write(f'G91 G1 {printhead1_axis}{containerHeight+amount_up} {printhead2_axis}{containerHeight+amount_up} F{customJogSpeed} \n') # raise axes 1 and 2
+            f.write(f'G91 G1 X-{dist_between_printheads} F{customJogSpeedTranslation} \n')
+            f.write(f'G91 G1 Y{y_offsetToVen} F{customJogSpeed} \n')
+            f.write(f'G91 G1 {printhead1_axis}-{containerHeight+amount_up} {printhead2_axis}-{containerHeight+amount_up} F{customJogSpeed} \n')
             f.write(f'G90 \n')
             f.write(f'G92 X{prev_x} Y{prev_y} \n')
             f.write(f'G90 G1 X{x} Y{y} \n')
@@ -5430,10 +5430,10 @@ if multimaterial == 1 and custom_gcode == 0 and printer_type == 2:
             f.write(f'$COM={venous_COM} \n') # active
             f.write(f'$AP={active_pressure} \n') # active
             f.write('Call setPress P$COM Q$AP \n')
-            f.write(f'G91 G1 {printhead1_axis}{amount_up} {printhead2_axis}{amount_up} F{customJogSpeed} \n') # raise axes 1 and 2
+            f.write(f'G91 G1 {printhead1_axis}{containerHeight+amount_up} {printhead2_axis}{containerHeight+amount_up} F{customJogSpeed} \n') # raise axes 1 and 2
             f.write(f'G91 G1 X-{dist_between_printheads} F{customJogSpeedTranslation} \n')
             f.write(f'G91 G1 Y{y_offsetToVen} F{customJogSpeed} \n')
-            f.write(f'G91 G1 {printhead1_axis}-{amount_up} {printhead2_axis}-{amount_up} \n')
+            f.write(f'G91 G1 {printhead1_axis}-{containerHeight+amount_up} {printhead2_axis}-{containerHeight+amount_up} F{customJogSpeed} \n')
             f.write(f'G90 \n')
             f.write(f'G92 X{prev_x} Y{prev_y} \n')
             f.write(f'G90 G1 X{x} Y{y} \n')
@@ -5547,7 +5547,7 @@ print('If you have not already calibrated, calibrate as below:')
 print('To find the offset in x- and y- between the two nozzles:')
 print(f'1. Position first nozzle (arterial) on the Calibration Tip and enter: G92 X0 Y0 {printhead1_axis}0')
 print(f'2. Position second nozzle (venous) on the Calibration Tip and enter: G92 {printhead2_axis}0')
-print('3. BEFORE MOVING ANYTHING, record the offset between the nozzles in X and Y, which will be the current x- and y-coordinates of the venous nozzle. The offsets should be positive (if they are negative, use the absolute value). ')
+print('3. BEFORE MOVING ANYTHING, record the offset between the nozzles in X and Y, which will be the current x- and y-coordinates of the venous nozzle.')
 print('4. Re-run x-cavate, inputting the offsets at the command line as offset_x and offset_y. Use the front_nozzle variable to specify whether the venous nozzle (right printhead) is in front (front_nozzle=1) or behind (front_nozzle=2) the arterial nozzle (left printhead).')
 print('\nTo position for multimaterial printing, after completing the calibration:')
 print('\nIf +x is right, +y is backwards, and +z is upwards (with respect to nozzle\'s movement or relative movement to the printbed):')
