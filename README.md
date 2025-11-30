@@ -163,16 +163,7 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | jog_translation | Jog speed for translating between nozzles in multimaterial mode (mm/s) | 10 |
 | jog_speed_lift | Jog speed for initial nozzle lift (mm/s) | 0.25 |
 | initial_lift | Distance over which to use jog_speed_lift when lifting nozzle (mm) | 0.5 |
-| extrusion_start | Extrusion start value for extrusion printing (mm) | 0 |
-| extrusion_end | Extrusion end value for extrusion printing (mm) | 0 |
-| extrusion_radii | Use vessel radii for extrusion calculations? 1=Yes, 0=No | 0 |
-| extrusion_diam | Vessel diameter (mm) for extrusion printing (not using SimVascular radii) | 1 |
-| extrusion_syringe_diam | Syringe diameter (mm) for extrusion printing | 1 |
 | extrusion_factor | Extrusion value multiplier for extrusion printing | 1 |
-| extrusion_start_arterial | Extrusion start value for arterial ink in extrusion printing (mm) | 0 |
-| extrusion_start_venous | Extrusion start value for venous ink in extrusion printing (mm) | 0 |
-| extrusion_end_arterial | Extrusion stop value for arterial ink in extrusion printing (mm) | 0 |
-| extrusion_end_venous | Extrusion stop value for venous ink in extrusion printing (mm) | 0 |
 | positiveInk_start | Extrusion start value for positive ink displacement-based printing (mm) | 0 |
 | positiveInk_end | Extrusion stop value (mm) for positive ink displacement-based printing (mm) | 0 |
 | positiveInk_radii | Use vessel radii for extrusion calculations? 1 = Yes, 0 = No | 0 |
