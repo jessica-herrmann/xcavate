@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# https://github.com/jessica-herrmann/vesselprint | Skylar-Scott Lab
+# Access at: https://github.com/jessica-herrmann/vesselprint | Skylar-Scott Laboratory
 
-# Last updated: 11.28.25
+# Last updated: 11/30/25
 
 ############################################################### Import: Dependencies ######################################################################
 
@@ -3306,7 +3306,7 @@ if plots == 1 and downsample == 1:
   fig.update_scenes(aspectmode='cube')
 
   # Store output graphs
-  fig.write_html(f'outputs/network_downsampled_SM.html') 
+  fig.write_html(f'outputs/plots/network_downsampled_SM.html') 
 
   print('Plotted downsampled network.\n')
 
@@ -3813,10 +3813,10 @@ if close_var_SM == 1:
 
   # Extract list of passes to extend
   with open(f'{gap_file_SM}','r') as gapfile:
-    gap_pass_SM = gapfile.readlines()
-    gap_pass_SM = [int(item.rstrip()) for item in gap_pass_SM]
+    pass_to_extend_SM = gapfile.readlines()
+    pass_to_extend_SM = [int(item.rstrip()) for item in pass_to_extend_SM]
     with open ('outputs/changelog.txt','a') as f:
-      f.write(f'\nExtend SM {gap_pass_SM}')
+      f.write(f'\nExtend SM {pass_to_extend_SM}')
       f.close()
   f.close()
 
@@ -3847,11 +3847,11 @@ if close_var_SM == 1:
 if close_var_MM == 1:
 
   # Extract list of passes to extend
-  with open(f'{gap_file_MM}','r') as gapfile:
-    gap_pass_MM = gapfile.readlines()
-    gap_pass_MM = [int(item.rstrip()) for item in gap_pass_MM]
+  with open(f'{pass_to_extend_MM}','r') as gapfile:
+    pass_to_extend_MM = gapfile.readlines()
+    pass_to_extend_MM = [int(item.rstrip()) for item in pass_to_extend_MM]
     with open ('outputs/changelog.txt','a') as f:
-      f.write(f'\nExtend MM {gap_pass_MM}')
+      f.write(f'\nExtend MM {pass_to_extend_MM}')
       f.close()
   f.close()
 
@@ -4016,7 +4016,7 @@ if plots == 1 and num_overlap != 0:
   fig.update_scenes(aspectmode='cube')
 
   # Store output graphs
-  fig.write_html(f'outputs/graph/network_SM_overlap.html') 
+  fig.write_html(f'outputs/plots/network_SM_overlap.html') 
 
 
 ########################################### Optional Plot: Final Print Passes (Arterial vs. Venous) (Overlap) ##########################################
@@ -4081,7 +4081,7 @@ if plots == 1 and multimaterial == 1 and num_overlap != 0:
   fig.update_scenes(aspectmode='cube')
 
   # Store output graphs
-  fig.write_html(f'outputs/network_MM.html') 
+  fig.write_html(f'outputs/plots/network_MM.html') 
 
   print('\nFinished plotting passes for multi-material network.')
 
@@ -4479,7 +4479,7 @@ if printer_type == 0:
           f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed}\n')
         j_counter += 1
       # Optionally extending the end of the print pass for gap closure
-      if close_var_SM == 1 and i in gap_pass_SM:
+      if close_var_SM == 1 and i in pass_to_extend_SM:
         f.write(f';##### Extra segment #####\n')
         f.write(f'G91\n')
         f.write(f'G1 X{delta_x_SM[gapTracker]} Y{delta_y_SM[gapTracker]} {printhead1_axis}{delta_z_SM[gapTracker]} F{printspeed}\n')
@@ -4596,7 +4596,7 @@ if printer_type == 1:
 
         j_counter += 1
       # Optionally extending the end of the print pass for gap closure
-      if close_var_SM == 1 and i in gap_pass_SM:
+      if close_var_SM == 1 and i in pass_to_extend_SM:
 
         # Calculate norm of extension segment
         norm = np.linalg.norm([delta_x_SM[gapTracker], delta_y_SM[gapTracker], delta_z_SM[gapTracker]])
@@ -4632,7 +4632,7 @@ if printer_type == 1:
 
 ############################ Generate g-code (Aerotech) | SINGLE MATERIAL | CONSTANT OR CHANGING RADII ##################################
 
-if multimaterial != 1 and custom == 0 and printer_type == 2:
+if multimaterial != 1 and custom_gcode == 0 and printer_type == 2:
 
 
   gapTracker = 0
@@ -4687,7 +4687,7 @@ if multimaterial != 1 and custom == 0 and printer_type == 2:
           f.write(f'G1 X{x} Y{y} {printhead1_axis}{z} F{printspeed}\n')
         j_counter += 1
       # Optionally extending the end of the print pass for gap closure
-      if close_var_SM == 1 and i in gap_pass_SM:
+      if close_var_SM == 1 and i in pass_to_extend_SM:
         f.write(f';##### Extra segment #####\n')
         f.write(f'G91\n')
         f.write(f'G1 X{delta_x_SM[gapTracker]} Y{delta_y_SM[gapTracker]} {printhead1_axis}{delta_z_SM[gapTracker]} F{printspeed}\n')
@@ -4944,7 +4944,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 0:
             f.write(f'G1 X{x} Y{y} {curr_axis}{z} F{printspeed} \n')
         j_counter += 1
       # Optionally extending the end of the print pass for gap closure
-      if close_var_MM == 1 and i in gap_pass_MM:
+      if close_var_MM == 1 and i in pass_to_extend_MM:
         f.write(f';##### Extra segment #####\n')
         f.write(f'G91\n')
         f.write(f'G1 X{delta_x_MM[gapTracker]} Y{delta_y_MM[gapTracker]} {curr_axis}{delta_z_MM[gapTracker]} F{printspeed}\n')
@@ -5104,7 +5104,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
           overshoot_adjustment = np.zeros(3)
 
           # Check to see if the previous pass has a gap closure segment
-          if close_var_MM == 1 and (i-1) in gap_pass_MM:
+          if close_var_MM == 1 and (i-1) in pass_to_extend_MM:
             
             # Calculate overshoot by adding deltas for current print pass
             overshoot_adjustment = np.array([delta_x_MM[gapTracker-1], delta_y_MM[gapTracker-1], delta_z_MM[gapTracker-1]])
@@ -5231,7 +5231,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
         j_counter += 1
 
       # Optionally extending the end of the print pass for gap closure
-      if close_var_MM == 1 and i in gap_pass_MM:
+      if close_var_MM == 1 and i in pass_to_extend_MM:
         #Calculate norm of extension segment
         norm = np.linalg.norm([delta_x_MM[gapTracker], delta_y_MM[gapTracker], delta_z_MM[gapTracker]])
 
@@ -5466,7 +5466,7 @@ if multimaterial == 1 and custom_gcode == 0 and printer_type == 2:
             f.write(f'G1 X{x} Y{y} {curr_axis}{z} F{printspeed} \n')
         j_counter += 1
       # Optionally extending the end of the print pass for gap closure
-      if close_var_MM == 1 and i in gap_pass_MM:
+      if close_var_MM == 1 and i in pass_to_extend_MM:
         f.write(f';##### Extra segment #####\n')
         f.write(f'G91\n')
         f.write(f'G1 X{delta_x_MM[gapTracker]} Y{delta_y_MM[gapTracker]} {curr_axis}{delta_z_MM[gapTracker]} F{printspeed}\n')
