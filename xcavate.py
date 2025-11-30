@@ -130,7 +130,6 @@ close_var_MM = args.close_mm
 custom_gcode = args.custom
 print_speed = args.print_speed
 printer_type = args.printer_type
-#prevent_drying = args.prevent_drying
 
 customJogSpeed = args.jog_speed
 customZJogSpeed = args.jog_speed_lift
@@ -4721,10 +4720,6 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 0:
   # ink on the righthand printhead (Ab).
 
 
-  # Specifying which syringe connects to which pressure box
-  arterial_COM = 2
-  venous_COM = 1
-
   # Need to start by zeroing at the arterial printhead
 
   z_range = abs(max(points_array[:,2]) - min(points_array[:,2]))
@@ -4988,9 +4983,6 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 1:
   # Place the arterial (red) ink on the left printead (Aa), and the venous (blue)
   # ink on the righthand printhead (Ab).
 
-  # Specifying which syringe connects to which pressure box
-  arterial_COM = 2
-  venous_COM = 1
 
   # Need to start by zeroing at the arterial printhead
 
