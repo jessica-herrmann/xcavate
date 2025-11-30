@@ -163,7 +163,6 @@ If the user does not specify the flow rate, X-CAVATE will default to a value of 
 | jog_translation | Jog speed for translating between nozzles in multimaterial mode (mm/s) | 10 |
 | jog_speed_lift | Jog speed for initial nozzle lift (mm/s) | 0.25 |
 | initial_lift | Distance over which to use jog_speed_lift when lifting nozzle (mm) | 0.5 |
-| extrusion_factor | Extrusion value multiplier for extrusion printing | 1 |
 | positiveInk_start | Extrusion start value for positive ink displacement-based printing (mm) | 0 |
 | positiveInk_end | Extrusion stop value (mm) for positive ink displacement-based printing (mm) | 0 |
 | positiveInk_radii | Use vessel radii for extrusion calculations? 1 = Yes, 0 = No | 0 |
