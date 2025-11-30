@@ -4818,7 +4818,7 @@ if multimaterial == 1 and custom_gcode == 1 and printer_type == 0:
             curr = 0
           else:
             f.write('; Print Pass 0 \n')
-            f.write(f'G92 X{x} Y{y} {curr_axis}{z} \n')
+            f.write(f'G92 X{x} Y{y} {printhead1_axis}{z} {printhead2_axis}{z} \n')
             f.write('G90 F0.5 \n')
             # Start extrusion of curr_printhead
             if custom_gcode == 1:
@@ -5376,7 +5376,7 @@ if multimaterial == 1 and custom_gcode == 0 and printer_type == 2:
             curr = 0
           else:
             f.write('; Print Pass 0 \n')
-            f.write(f'G92 X{x} Y{y} {curr_axis}{z} \n')
+            f.write(f'G92 X{x} Y{y} {printhead1_axis}{z} {printhead2_axis}{z} \n')
             f.write(f'Enable {curr_printhead} \n') # START EXTRUSION
             f.write('G90 F0.5 \n')
             f.write(f'BRAKE {curr_printhead} 0 \n') # START EXTRUSION
@@ -5402,8 +5402,8 @@ if multimaterial == 1 and custom_gcode == 0 and printer_type == 2:
             f.write(f'$AP={active_pressure} \n') # active
             f.write('Call setPress P$COM Q$AP \n')
             f.write(f'G91 G1 {printhead1_axis}{containerHeight+amount_up} {printhead2_axis}{containerHeight+amount_up} F{customJogSpeed} \n') # raise axes 1 and 2
-            f.write(f'G91 G1 X-{dist_between_printheads} F{customJogSpeedTranslation} \n')
-            f.write(f'G91 G1 Y{y_offsetToVen} F{customJogSpeed} \n')
+            f.write(f'G91 G1 X{dist_between_printheads} F{customJogSpeedTranslation} \n')
+            f.write(f'G91 G1 Y{y_offsetToArt} F{customJogSpeed} \n')
             f.write(f'G91 G1 {printhead1_axis}-{containerHeight+amount_up} {printhead2_axis}-{containerHeight+amount_up} F{customJogSpeed} \n')
             f.write(f'G90 \n')
             f.write(f'G92 X{prev_x} Y{prev_y} \n')
