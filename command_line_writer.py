@@ -1,16 +1,14 @@
 ################################### About ################################### 
 
-# This file writes command line prompts for XCavate
+# This file writes command line prompts for X-CAVATE.
 
-# Remember to change the file name variables to ensure existing files are not overwritten
-
-# Last updated: 11/28/25
+# Last updated: 11/30/25
 
 ###################################  Required parameters ################################### 
 
 # Required Parameters
 required_parameters = {
-'network_file': "inputs/multimaterial_network_.txt", # Path to .txt file containing network coordinates
+'network_file': "inputs/multimaterial_network.txt", # Path to .txt file containing network coordinates
 'inletoutlet_file': "inputs/inlet_outlet_multimaterial.txt", # Path to .txt file containing inlet and outlet coordinates
 'multimaterial': 0, # 1 if two inks (arterial & venous), 0 if only one
 'tolerance_flag': 0, # 1 if including tolerance value that differs from the nozzle outer diameter, 0 if not
@@ -55,17 +53,7 @@ include_optional = {
 'jog_speed': 200, # Custom jog speed, in mm/s --> Default is 5
 'jog_translation': 200, # Jog speed for translating between nozzles in multimaterial, in mm/s --> Default is 10
 'jog_speed_lift': 50, # Custom jog speed, in mm/s --> Default is 1
-'intial_lift': 3, # Distance over which to use jogSpeedLift when lifting the nozzle, in mm --> Default is 0.5
-'extrusion_start': 0, # Extrusion start value for extrusion printing (mm)
-'extrusion_end': 0, # Extrusion end value for extrusion printing (mm)
-'extrusion_radii': 0, # Use vessel radii for extrusion calculations? 1=Yes, 0=No
-'extrusion_diam': 1, # Vessel diameter (mm) for extrusion printing (not using SimVascular radii)
-'extrusion_syringe_diam': 1, # Syringe diameter (mm) for extrusion printing
-'extrusion_factor': 1, # Extrusion value multiplier for extrusion printing
-'extrusion_start_arterial': 0, # Extrusion start value for arterial ink in extrusion printing (mm)
-'extrusion_start_venous': 0, # Extrusion start value for venous ink in extrusion printing (mm)
-'extrusion_end_arterial': 0, # Extrusion stop value for arterial ink in extrusion printing (mm)
-'extrusion_end_venous': 0, # Extrusion stop value for venous ink in extrusion printing (mm)
+'initial_lift': 3, # Distance over which to use jogSpeedLift when lifting the nozzle, in mm --> Default is 0.5
 'positiveInk_start': 0.30, # Extrusion start value for positive ink displacement-based printing (mm) --> Default is 0
 'positiveInk_end': -0.30, # Extrusion stop value (mm) for positive ink displacement-based printing (mm) --> Default is 0
 'positiveInk_radii': 1, # Use vessel radii for extrusion calculations? 1 = Yes, 0 = No --> Default is 0
