@@ -16,7 +16,7 @@ required_parameters = {
 'container_height': 50, # Height of the print container (mm)
 'amount_up': 10, # Amount to raise nozzles in z-direction before switching the inactive/active nozzles, in mm --> Default is 10
 'num_decimals': 2, # Number of decimals places for rounding output values
-'speed_calc': 0, # 1 if computing print speeds for changing radii, 0 if not
+'speed_calc': 0, # 1 if computing print speeds for changing radii within a given vessel, 0 if not
 'plots': 1, # Generate plots of network print paths? 1=Yes, 0=No
 'downsample': 0, # Downsample interpolated network? 1=Yes, 0=No
 'custom': 0, # Including custom g-code? 1=Yes, 0=No
