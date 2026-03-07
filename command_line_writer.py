@@ -20,7 +20,7 @@ required_parameters = {
 'plots': 1, # Generate plots of network print paths? 1=Yes, 0=No
 'downsample': 0, # Downsample interpolated network? 1=Yes, 0=No
 'custom': 0, # Including custom g-code? 1=Yes, 0=No
-'printer_type': 2, # Type of custom printer? 2=Aerotech, 1=Positive ink displacement, 0=Pressure-based
+'printer_type': 1, # Type of custom printer? 2=Aerotech, 1=Positive ink displacement, 0=Pressure-based
 }
 
 
