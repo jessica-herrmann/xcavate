@@ -1,0 +1,15 @@
+name: xcavate
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.10
+  - pandas=2.3.2
+  - numpy=2.3.2
+  - matplotlib=3.10.6
+  - plotly=6.3.0
+  - prompt_toolkit=3.0.52
+  - pip
+  - pip:
+      - torch
