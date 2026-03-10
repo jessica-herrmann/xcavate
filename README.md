@@ -8,7 +8,7 @@ X-CAVATE accepts an input list of coordinates (in cm) specifying the b-splines c
 
 ## Dependencies
 
-X-CAVATE is built in Python 3 and uses the following libraries:
+X-CAVATE is built in Python 3 (3.10.9) and uses the following libraries:
 * Pandas 2.3.2
 * Numpy 2.3.2
 * Matplotlib 3.10.6
