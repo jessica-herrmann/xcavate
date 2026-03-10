@@ -26,7 +26,7 @@ $ conda env create -f xcavate_environment.yml
 
 Activate the environment:
 ```
-$ conda activate xcavate_environment
+$ conda activate xcavate
 ```
 
 ## Installation
