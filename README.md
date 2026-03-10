@@ -21,7 +21,7 @@ To install a Conda environment containing these dependencies, first install Mini
 
 Next, in the command line interface, create the virtual environment:
 ```
-$ conda env create -n xcavate_environment
+$ conda env create -f xcavate_environment.yml
 ```
 
 Activate the environment:
