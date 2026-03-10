@@ -6,6 +6,19 @@ X-CAVATE accepts an input list of coordinates (in cm) specifying the b-splines c
 
 # Getting Started
 
+## Dependencies
+
+X-CAVATE is built in Python 3 and uses the following libraries:
+* Pandas 2.3.2
+* Numpy 2.3.2
+* Matplotlib 3.10.6
+* Plotly 6.3.0
+* Prompt_toolkit 3.0.52
+
+To install a Conda environment containing these dependences, type:
+```$ conda env create -f xcavate_environment.yml
+$ conda activate xcavate```
+
 ## Input Files
 
 ### Custom Files
