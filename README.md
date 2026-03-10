@@ -16,7 +16,8 @@ X-CAVATE is built in Python 3 and uses the following libraries:
 * Prompt_toolkit 3.0.52
 
 To install a Conda environment containing these dependences, type:
-```$ conda env create -f xcavate_environment.yml
+```
+$ conda env create -f xcavate_environment.yml
 $ conda activate xcavate
 ```
 
