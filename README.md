@@ -29,6 +29,14 @@ Activate the environment:
 $ conda activate xcavate
 ```
 
+## Installation
+
+Install X-CAVATE as follows:
+
+```
+$ git clone https://github.com/jessica-herrmann/xcavate
+```
+
 ## Input Files
 
 ### Custom Files
