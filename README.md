@@ -19,9 +19,13 @@ To install a Conda environment containing these dependencies, first install Mini
 * Mac: https://www.anaconda.com/docs/getting-started/miniconda/install#macos-2
 * Windows: https://www.anaconda.com/docs/getting-started/miniconda/install#windows-command-prompt
 
-Next, in the command line interface, type:
+Next, in the command line interface, create the virtual environment:
 ```
-$ conda env create -f xcavate_environment.yml
+$ conda env create -n xcavate_environment
+```
+
+Activate the environment:
+```
 $ conda activate xcavate
 ```
 
