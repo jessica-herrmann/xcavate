@@ -15,7 +15,9 @@ X-CAVATE is built in Python 3 and uses the following libraries:
 * Plotly 6.3.0
 * Prompt_toolkit 3.0.52
 
-To install a Conda environment containing these dependences, type:
+To install a Conda environment containing these dependencies, first install Miniconda according to these instructions: https://www.anaconda.com/docs/getting-started/miniconda/install#macos-2.
+
+Next, type:
 ```
 $ conda env create -f xcavate_environment.yml
 $ conda activate xcavate
