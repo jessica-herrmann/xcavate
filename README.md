@@ -4,6 +4,12 @@ X-CAVATE is an algorithm for converting vascular network geometries into collisi
 
 X-CAVATE accepts an input list of coordinates (in cm) specifying the b-splines constituting a vascular network. It reorders the coordinates such that they can be printed, from start to finish, to fabricate the network without collisions between the printhead nozzle and deposited ink.
 
+# About Version v0
+
+This is the version of the X-CAVATE software which was used to construct the print presented in the paper:
+
+Sexton, Z. A., Rütsche, D., Herrmann, J. E., Hudson, A. R., Sinha, S., Du, J., ... & Marsden, A. L. (2025). Rapid model-guided design of organ-scale synthetic vasculature for biomanufacturing. Science, 388(6752), 1198-1204.
+
 # Getting Started
 
 ## Dependencies
