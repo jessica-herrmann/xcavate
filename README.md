@@ -4,6 +4,12 @@ X-CAVATE is an algorithm for converting vascular network geometries into collisi
 
 X-CAVATE accepts an input list of coordinates (in cm) specifying the b-splines constituting a vascular network. It reorders the coordinates such that they can be printed, from start to finish, to fabricate the network without collisions between the printhead nozzle and deposited ink.
 
+# Version v1
+
+This version of X-CAVATE, v1, refers to the most up-to-date version of X-CAVATE which was exclusively hand-coded. It is the version of X-CAVATE which was subsequently modified by Claude to produce version v2.
+
+It is equivalent to the version called "xcavate_11.30.25."
+
 # Getting Started
 
 ## Dependencies
