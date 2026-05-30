@@ -16,8 +16,8 @@ It was also used to generate the pressure-driven prints in our current submissio
 
 | Version | Description |
 | ----------- | ----------- |
-| v0 | Original hand-coded version of X-CAVATE used in Sexton et al. (2025) and for some figures in our current submission |
-| v1 | Hand-coded edits made to version v0, used to generate some figures in our current submission |
+| v0 | Original hand-coded version of X-CAVATE used in Sexton et al. (2025) and for pressure-driven prints in our current submission |
+| v1 | Hand-coded edits made to version v0, used to generate syringe pump-driven prints in our current submission |
 | v2 | Claude-generated edits to v1 to create the GUI described in our current submission (not used to generate prints) |
 
 
