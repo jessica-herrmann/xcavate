@@ -10,6 +10,8 @@ This is the version of the X-CAVATE software which was used to construct the pri
 
 Sexton, Z. A., Rütsche, D., Herrmann, J. E., Hudson, A. R., Sinha, S., Du, J., ... & Marsden, A. L. (2025). Rapid model-guided design of organ-scale synthetic vasculature for biomanufacturing. Science, 388(6752), 1198-1204.
 
+https://www.science.org/doi/abs/10.1126/science.adj6152
+
 # Getting Started
 
 ## Dependencies
