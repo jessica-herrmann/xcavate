@@ -20,6 +20,7 @@ Convert vascular network geometries (e.g. from SimVascular) into collision-free 
 - [Output Files](#output-files)
 - [Project Structure](#project-structure)
 - [Development](#development)
+- [Version History](#version-history)
 - [License](#license)
 
 ---
@@ -743,6 +744,10 @@ X-CAVATE has two features for optimizing closure of gaps at print pass junctions
 **1. Nodal Overlap** (`--num_overlap`): Overlap the end of a print pass with the previously-printed pass it connects to by N nodes. If fewer than N nodes exist in the existing pass, X-CAVATE retraces the entire pass.
 
 **2. Segment Extension** (via extension files): Manually specify which passes to extend and by how much (delta x, y, z in mm). See `inputs/extension/` for file format.
+
+---
+
+## Version History
 
 ---
 
