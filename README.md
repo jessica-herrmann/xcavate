@@ -749,6 +749,14 @@ X-CAVATE has two features for optimizing closure of gaps at print pass junctions
 
 ## Version History
 
+This version of X-CAVATE was not used to generate any of the prints present in our current submission. It was used to create the GUI, and it was created by modifying version v1 with Claude.
+
+| Version | Description |
+| ----------- | ----------- |
+| v0 | Original hand-coded version of X-CAVATE used in Sexton et al. (2025) and for pressure-driven prints in our current submission |
+| v1 | Hand-coded edits made to version v0, used to generate syringe pump-driven prints in our current submission |
+| v2 | Claude-generated edits to v1 to create the GUI described in our current submission (not used to generate prints) |
+
 ---
 
 ## License
