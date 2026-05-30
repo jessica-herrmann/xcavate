@@ -6,15 +6,15 @@ X-CAVATE accepts an input list of coordinates (in cm) specifying the b-splines c
 
 # Version v1
 
-This version of X-CAVATE, v1, refers to the most up-to-date version of X-CAVATE which was **exclusively hand-coded**. It is the version of X-CAVATE which was subsequently modified by Claude to produce version v2.
+This version of X-CAVATE, v1, refers to the most up-to-date version of X-CAVATE which was **exclusively hand-coded**. It is the version of X-CAVATE which was used to generate the syringe pump-driven prints in our current submission. It is equivalent to the version called "xcavate_11.30.25."
 
-It is equivalent to the version called "xcavate_11.30.25."
+It is the version of X-CAVATE which was subsequently modified by Claude to produce version v2.
 
 
 | Version | Description |
 | ----------- | ----------- |
-| v0 | Original hand-coded version of X-CAVATE used in Sexton et al. (2025) and for some figures in our current submission |
-| v1 | Hand-coded edits made to version v0, used to generate some figures in our current submission |
+| v0 | Original hand-coded version of X-CAVATE used in Sexton et al. (2025) and for pressure-driven prints in our current submission |
+| v1 | Hand-coded edits made to version v0, used to generate syringe pump-driven prints in our current submission |
 | v2 | Claude-generated edits to v1 to create the GUI described in our current submission (not used to generate prints) |
 
 # Getting Started
