@@ -12,15 +12,14 @@ from pathlib import Path
 from .compare import aggregate, numerical_diff
 from .parse_gcode import parse
 from .pipelines import (
-    CANONICAL_PARAMS, PIPELINES, Case, Pipeline, discover_cases,
+    CANONICAL_PARAMS, PIPELINES, VERIF_ROOT, Case, Pipeline, discover_cases,
 )
 from .report import (
     PipelineResult, append_summary_row, write_case_report,
 )
 
 
-VERIF_ROOT = Path("/Users/sohams/X-CAVATE/Vascular Trees Verification")
-REPORTS_ROOT = Path("/Users/sohams/X-CAVATE/tests/verification_harness/reports")
+REPORTS_ROOT = Path(__file__).resolve().parent / "reports"
 
 
 def plan_matrix(cases: list[Case], only: str | None = None) -> list[Case]:

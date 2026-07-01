@@ -30,7 +30,7 @@ def test_run_one_marks_failed_pipeline_when_subprocess_returns_nonzero(tmp_path)
     )
     case.network.write_text("Vessel: 0, Number of Points: 1\n\n1.0, 2.0, 3.0, 0.05\n")
     case.inletoutlet.write_text("inlet\n1.0, 2.0, 3.0\noutlet\n1.0, 2.0, 3.0\n")
-    pipeline = pmod.PIPELINES[0]  # science
+    pipeline = pmod.PIPELINES[0]  # v0
 
     fake = MagicMock()
     fake.returncode = 1

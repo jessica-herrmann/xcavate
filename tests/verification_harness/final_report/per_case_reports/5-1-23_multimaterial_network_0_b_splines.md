@@ -1,23 +1,23 @@
 # Case `5-1-23_multimaterial_network_0_b_splines`
 
 ## Pipelines
-### science — OK
+### v0 — OK
 - exit_code: `0`
 - emitted: `gcode_multimaterial.txt`, `gcode.txt`
 - metrics: `moves=3110 g0=0 g1=2424 g4=0 path=7182.730 mm mm_trans=33 t_est=1522.04 s`
 
-### x1130 — OK
+### v1 — OK
 - exit_code: `0`
 - emitted: `gcode_MM_pressure.txt`, `gcode_SM_pressure.txt`
 - metrics: `moves=2525 g0=0 g1=2457 g4=0 path=7353.539 mm mm_trans=33 t_est=1217.99 s`
 
-### main — OK
+### v2 — OK
 - exit_code: `0`
 - emitted: `gcode_MM_pressure.txt`, `gcode_SM_pressure.txt`
 - metrics: `moves=2524 g0=0 g1=2457 g4=0 path=7353.539 mm mm_trans=33 t_est=1217.99 s`
 
 ## Pairwise diffs
-### science vs x1130
+### v0 vs v1
 - counts=(3110,2525) aligned=False max_xyz_dev=72.72 max_f_dev=9.332 max_e_dev=0 out_of_tol=2521 byte_equal=False
 - first divergences:
 
@@ -64,7 +64,7 @@
         B: G1 X-10.380757 Y3.147297 B-9.395464 F2.548927955524282
 ```
 
-### science vs main
+### v0 vs v2
 - counts=(3110,2524) aligned=False max_xyz_dev=72.72 max_f_dev=9.332 max_e_dev=0 out_of_tol=2521 byte_equal=False
 - first divergences:
 
@@ -111,44 +111,45 @@
         B: G1 X-10.380757 Y3.147297 B-9.395464 F2.548928
 ```
 
-### x1130 vs main
+### v1 vs v2
 - counts=(2525,2524) aligned=True max_xyz_dev=4.915e-07 max_f_dev=4.994e-07 max_e_dev=0 out_of_tol=0 byte_equal=False
 
 ## Known residual deltas
 
 These are documented, characterized differences between the pipelines — not bugs in the harness. Each is either intrinsic to the pipeline implementation or already mitigated by the harness.
 
-### x1130 ignores its own `--flow` argument (mitigated)
-`id: x1130-flow-override`
+### v1 ignores its own `--flow` argument (mitigated)
+`id: v1-flow-override`
 
 `xcavate_11_30_25.py` line 3705 hardcodes `flow = 0.1609429886081009`, overriding the `--flow` argparse value. The harness sets `CANONICAL_PARAMS['flow'] = 0.1609429...` so all pipelines compute feedrates on the same flow constant; without this match the F values would diverge by the 0.1609/0.1272 = 1.265× ratio across every G1 move.
 
-### x1130 emits an extra leading `G90` before its first `G92`
+### v1 emits an extra leading `G90` before its first `G92`
 `id: preamble-line-shift`
 
-x1130's preamble is `G90 / G92 .. / G90 F<feed> / ...`; main's is `G92 .. / G90 F<feed> / ...`. This shifts every subsequent line index by 1 between the two streams. The harness compensates via `align_on_first_g1=True` in `numerical_diff`, so reported deviations are post-alignment and reflect actual trajectory drift rather than the index shift.
+v1's preamble is `G90 / G92 .. / G90 F<feed> / ...`; v2's is `G92 .. / G90 F<feed> / ...`. This shifts every subsequent line index by 1 between the two streams. The harness compensates via `align_on_first_g1=True` in `numerical_diff`, so reported deviations are post-alignment and reflect actual trajectory drift rather than the index shift.
 
-### x1130's multimaterial-pressure writer is gated on `custom_gcode == 1` (patched)
-`id: x1130-mm-pressure-gate`
+### v1's multimaterial-pressure writer is gated on `custom_gcode == 1` (patched)
+`id: v1-mm-pressure-gate`
 
-Script line 4717 reads `if multimaterial == 1 and custom_gcode == 1 and printer_type == 0:`. Without `--custom 1` (and the auxiliary `inputs/custom/*.txt` template files it would then read), x1130 silently skipped MM emission and only wrote `gcode_SM_pressure.txt` even for MM inputs — leading to `mm_trans=0` in our metrics. `x1130_runner.py` rewrites that gate in memory so the MM writer runs without requiring custom template files. After the patch, x1130 emits 184 nozzle transitions on the 61-vessel network (vs main's 206).
+Script line 4717 reads `if multimaterial == 1 and custom_gcode == 1 and printer_type == 0:`. Without `--custom 1` (and the auxiliary `inputs/custom/*.txt` template files it would then read), v1 silently skipped MM emission and only wrote `gcode_SM_pressure.txt` even for MM inputs — leading to `mm_trans=0` in our metrics. `v1_runner.py` rewrites that gate in memory so the MM writer runs without requiring custom template files. After the patch, v1 emits 184 nozzle transitions on the 61-vessel network (matching v2, which also emits 184; v1 and v2 are bit-identical here).
 
-### main's iterative DFS produces one more raw pass than x1130's recursive DFS
+### v2's iterative DFS produces one more raw pass than v1's recursive DFS
 `id: dfs-extra-pass`
 
-main uses an explicit-stack iterative DFS in `xcavate/core/pathfinding.py` with reversed neighbour push order; x1130 uses a recursive DFS that iterates `graph[node]` in native order. On the 4-vessel network, main produces **14 raw passes** (lengths sorted: 5, 11, 12, 13, 20, 33, 68, 97, 113, 163, 203, 227, 397, 418) while x1130 produces **13**. The extra pass is typically a 2-node bridge through a branchpoint that x1130 absorbs into an adjacent pass. Same vessels are printed; the split boundary differs.
+v2 uses an explicit-stack iterative DFS in `xcavate/core/pathfinding.py` with reversed neighbour push order; v1 uses a recursive DFS that iterates `graph[node]` in native order. On the 4-vessel network, v2 produces **14 raw passes** (lengths sorted: 5, 11, 12, 13, 20, 33, 68, 97, 113, 163, 203, 227, 397, 418) while v1 produces **13**. The extra pass is typically a 2-node bridge through a branchpoint that v1 absorbs into an adjacent pass. Same vessels are printed; the split boundary differs.
 
 ### `run_full_gap_closure_pipeline` distributes branchpoint nodes differently
 `id: gap-closure-branchpoint-distribution`
 
-After subdivision (which is algorithmically equivalent in both pipelines), main's gap-closure prepends/appends shared branchpoint nodes to stitch passes — e.g. main pass 1 starts with `[1571, 1572, ...]` even though `subdivide_passes` returned `[1572, ...]`. Pass 2 ends with the same node it started with (`[985, 489, ..., 393, 985]`). x1130's gap closure makes the same kind of additions but distributes them across different passes, leaving one fewer net pass. Net effect: same printed segments and same vessel coverage, slightly different pass boundaries and therefore slightly different jog choreography between passes.
+After subdivision (which is algorithmically equivalent in both pipelines), v2's gap-closure prepends/appends shared branchpoint nodes to stitch passes — e.g. v2 pass 1 starts with `[1571, 1572, ...]` even though `subdivide_passes` returned `[1572, ...]`. Pass 2 ends with the same node it started with (`[985, 489, ..., 393, 985]`). v1's gap closure makes the same kind of additions but distributes them across different passes, leaving one fewer net pass. Net effect: same printed segments and same vessel coverage, slightly different pass boundaries and therefore slightly different jog choreography between passes.
 
-### main emits more multimaterial transitions than x1130
-`id: mm-transition-count-divergence`
+### Branchpoint daughter-selection ties resolved differently across pipelines
+`id: branchpoint-tiebreak-large-network`
 
-On the 61-vessel multimaterial network main emits **205** nozzle switches while x1130 emits **183** — an ~12% surplus. The per-switch choreography is byte-identical between the two pipelines (`G91 G1 A60 B60 F5 / G91 G1 X-103 F10 / G91 G1 Y0.5 F5 / G91 G1 A-60 B-60`); only the **count** and **positions** of switches differ. Cause: main's `_subdivide_by_material` in `xcavate/pipeline.py` splits passes at material transitions more aggressively than x1130's Branchpoint-Condition analogue, producing extra arterial↔venous flips. When the harness aligns the two streams by index, at some row main is mid-shuttle (`G91 G1 X-103`) while x1130 is on a normal print move at X ≈ +103 — giving the characteristic ~206 mm `max_xyz_dev`. Functionally the same vessels are printed in both materials; main just switches between printheads more often.
+On dense vasculature (e.g., the 500-vessel network with 63,904 interpolated points), some vessel endpoints have two or more candidate "daughter" nodes at *exactly equal* distance. Each pipeline uses a different tiebreaker:
+  • v2 → `scipy.cKDTree.query(point, k=N)` (binary tree)
+  • v1 → nested-loop brute force with strict-less comparison
+  • v0 → nested-loop brute force with slightly different loop ordering than v1
+When ties occur, the three implementations pick different daughter nodes. On the 4/9/14-vessel networks ties are rare, so the graphs match exactly (`v1 ↔ v2 = 0` mm). On the 500-vessel network ~38 adjacency-list entries differ between v2 and v1 — different branchpoint daughter pairs cascade through DFS into a different pass order, producing the ~70 mm `max_xyz_dev` between every pair (v0↔v1 = 71.16, v0↔v2 = 69.94, v1↔v2 = 70.19). All three pipelines still print the same vessels with the same total path; only the visit order differs.
 
-Two algorithmic divergences in this path have been reconciled with x1130 (with regression tests):
-  • outlier-swap order in `_subdivide_by_material` is now first → middle (cascading) → last
-  • `classify_passes_by_material` now uses the **second** node of each pass, matching `xcavate_11_30_25.py:4762`
-Neither fix moved the +22 transition surplus on the 61-vessel network, indicating a third difference remains (likely in the post-subdivide reclassification or in how same-material adjacent sub-passes are merged). Investigation paused; residual is documented rather than chased further.
+To force byte-equivalence we'd need to add an explicit secondary tiebreaker (e.g., "on equal distance, pick smaller node index") and apply it identically to all three implementations. None of the three is currently "correct" — they're all valid choices for the same geometric configuration.

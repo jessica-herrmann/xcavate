@@ -8,9 +8,9 @@ Layout produced::
         summary.md                  — copy of the pairwise-diff table
         gcode/
             <case_slug>/
-                science.txt          — Science.py output (preferred MM if applicable)
-                x1130.txt            — x1130 output (preferred MM if applicable)
-                main.txt             — main pipeline output (preferred MM)
+                v0.txt          — Science.py output (preferred MM if applicable)
+                v1.txt            — v1 output (preferred MM if applicable)
+                v2.txt             — v2 pipeline output (preferred MM)
         per_case_reports/
             <case_slug>.md           — copy of the per-case report
 
@@ -22,8 +22,9 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-REPORTS = Path("/Users/sohams/X-CAVATE/tests/verification_harness/reports")
-OUT = Path("/Users/sohams/X-CAVATE/tests/verification_harness/final_report")
+_HARNESS_DIR = Path(__file__).resolve().parent
+REPORTS = _HARNESS_DIR / "reports"
+OUT = _HARNESS_DIR / "final_report"
 
 
 def _multimaterial_filename_in(dir: Path) -> Path | None:
@@ -56,7 +57,7 @@ def _pipeline_gcode_root(case_dir: Path, pipeline: str) -> Path:
     isn't sufficient — we branch on pipeline name explicitly.
     """
     base = case_dir / pipeline
-    if pipeline == "science":
+    if pipeline == "v0":
         return base
     return base / "outputs" / "gcode"
 
@@ -71,7 +72,7 @@ def collect_for_case(case_slug: str, prefer_mm: bool) -> dict:
     out_case.mkdir(parents=True, exist_ok=True)
 
     result: dict[str, Path | None] = {}
-    for pipeline in ("science", "x1130", "main"):
+    for pipeline in ("v0", "v1", "v2"):
         src_root = _pipeline_gcode_root(case_dir, pipeline)
         if not src_root.exists():
             result[pipeline] = None

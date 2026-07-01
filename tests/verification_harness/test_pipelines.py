@@ -1,23 +1,19 @@
 """Tests for the pipeline registry, case discovery, and arg builders."""
-from pathlib import Path
-
 from .pipelines import (
     Case,
     CANONICAL_PARAMS,
     PIPELINES,
+    VERIF_ROOT,
     discover_cases,
-    build_args_science,
-    build_args_x1130,
-    build_args_main,
+    build_args_v0,
+    build_args_v1,
+    build_args_v2,
 )
-
-
-VERIF_ROOT = Path("/Users/sohams/X-CAVATE/Vascular Trees Verification")
 
 
 def test_pipeline_registry_has_three_entries():
     names = [p.name for p in PIPELINES]
-    assert names == ["science", "x1130", "main"]
+    assert names == ["v0", "v1", "v2"]
 
 
 def test_discover_cases_finds_six_paired_networks_plus_orphan():
@@ -29,7 +25,7 @@ def test_discover_cases_finds_six_paired_networks_plus_orphan():
     assert "network_0_b_splines_4_vessels.txt" in network_names
     assert "network_0_b_splines_9_vessels.txt" in network_names
     assert "network_0_b_splines_14_vessels.txt" in network_names
-    assert "network_0_b_splines_500_vessels (1).txt" in network_names
+    assert "network_0_b_splines_500_vessels.txt" in network_names
     assert len(cases) == 7
 
 
@@ -43,7 +39,7 @@ def test_multimaterial_inferred_from_filename():
 
 def test_orphan_500_vessel_has_synthesized_io():
     cases = {c.network.name: c for c in discover_cases(VERIF_ROOT)}
-    orphan = cases["network_0_b_splines_500_vessels (1).txt"]
+    orphan = cases["network_0_b_splines_500_vessels.txt"]
     assert orphan.inletoutlet.exists()
     assert "synth_inletoutlet" in orphan.inletoutlet.name
 
@@ -65,9 +61,9 @@ def _make_case(tmp_path):
     return Case(network=net, inletoutlet=ioc, multimaterial=False, slug="test")
 
 
-def test_science_args_omit_modern_flags(tmp_path):
+def test_v0_args_omit_modern_flags(tmp_path):
     case = _make_case(tmp_path)
-    args = build_args_science(case, CANONICAL_PARAMS)
+    args = build_args_v0(case, CANONICAL_PARAMS)
     assert "--custom" not in args
     assert "--printer_type" not in args
     assert "--amount_up" not in args
@@ -83,7 +79,7 @@ def test_science_args_omit_modern_flags(tmp_path):
 
 def test_x1130_args_include_modern_required_flags(tmp_path):
     case = _make_case(tmp_path)
-    args = build_args_x1130(case, CANONICAL_PARAMS)
+    args = build_args_v1(case, CANONICAL_PARAMS)
     for required in (
         "--network_file", "--inletoutlet_file", "--multimaterial",
         "--tolerance_flag", "--nozzle_diameter", "--num_decimals",
@@ -93,9 +89,9 @@ def test_x1130_args_include_modern_required_flags(tmp_path):
         assert required in args, f"Missing required 11_30 flag: {required}"
 
 
-def test_main_args_pin_convert_factor_to_ten(tmp_path):
+def test_v2_args_pin_convert_factor_to_ten(tmp_path):
     case = _make_case(tmp_path)
-    args = build_args_main(case, CANONICAL_PARAMS)
+    args = build_args_v2(case, CANONICAL_PARAMS)
     assert "--convert_factor" in args
     cf_idx = args.index("--convert_factor")
     assert args[cf_idx + 1] == "10.0"
@@ -104,6 +100,6 @@ def test_main_args_pin_convert_factor_to_ten(tmp_path):
 def test_multimaterial_flag_propagates(tmp_path):
     case = _make_case(tmp_path)
     object.__setattr__(case, "multimaterial", True)
-    args = build_args_science(case, CANONICAL_PARAMS)
+    args = build_args_v0(case, CANONICAL_PARAMS)
     mm_idx = args.index("--multimaterial")
     assert args[mm_idx + 1] == "1"

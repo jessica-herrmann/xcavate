@@ -2,14 +2,14 @@
 
 Each patch fixes a script-level bug or limitation that prevents the
 harness from getting comparable g-code output. The original file at
-``X1130_SCRIPT`` is left untouched; patches are applied at exec time.
+``V1_SCRIPT`` is left untouched; patches are applied at exec time.
 """
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
-X1130_SCRIPT = Path(__file__).parent / "legacy_scripts" / "xcavate_11_30_25.py"
+V1_SCRIPT = Path(__file__).parent / "legacy_scripts" / "xcavate_11_30_25.py"
 
 _PATCHES = [
     # Line 4717: drops the `custom_gcode == 1` requirement on the
@@ -36,19 +36,19 @@ _PATCHES = [
 
 
 def main() -> int:
-    src = X1130_SCRIPT.read_text()
+    src = V1_SCRIPT.read_text()
     for old, new in _PATCHES:
         if old not in src:
             sys.stderr.write(
-                f"x1130_runner: patch anchor not found:\n  {old!r}\n"
-                f"in {X1130_SCRIPT}\nUpstream may have changed; verify the patch.\n"
+                f"v1_runner: patch anchor not found:\n  {old!r}\n"
+                f"in {V1_SCRIPT}\nUpstream may have changed; verify the patch.\n"
             )
             return 2
         src = src.replace(old, new, 1)
     # Drop our own argv[0]; the patched script reads sys.argv[1:] via argparse.
-    sys.argv[0] = str(X1130_SCRIPT)
-    exec(compile(src, str(X1130_SCRIPT), "exec"),
-         {"__name__": "__main__", "__file__": str(X1130_SCRIPT)})
+    sys.argv[0] = str(V1_SCRIPT)
+    exec(compile(src, str(V1_SCRIPT), "exec"),
+         {"__name__": "__main__", "__file__": str(V1_SCRIPT)})
     return 0
 
 

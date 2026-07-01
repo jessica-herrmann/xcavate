@@ -30,54 +30,51 @@ def _fail(name: str) -> PipelineResult:
 def test_catalog_has_expected_ids():
     ids = {d.id for d in KNOWN_DELTAS}
     expected = {
-        "x1130-flow-override",
+        "v1-flow-override",
         "preamble-line-shift",
-        "x1130-mm-pressure-gate",
+        "v1-mm-pressure-gate",
         "dfs-extra-pass",
         "gap-closure-branchpoint-distribution",
-        "mm-transition-count-divergence",
         "branchpoint-tiebreak-large-network",
-        "science-keyerror",
+        "v0-keyerror",
     }
     assert expected.issubset(ids)
 
 
 def test_mm_only_deltas_suppress_on_sm_case():
     case = _Case(multimaterial=False)
-    results = {"science": _ok("s"), "x1130": _ok("x"), "main": _ok("m")}
+    results = {"v0": _ok("s"), "v1": _ok("x"), "v2": _ok("m")}
     section = format_for_case(case, results, {})
     # MM-only deltas must NOT appear
-    assert "x1130-mm-pressure-gate" not in section
-    assert "mm-transition-count-divergence" not in section
+    assert "v1-mm-pressure-gate" not in section
     # universally-relevant deltas SHOULD appear
-    assert "x1130-flow-override" in section
+    assert "v1-flow-override" in section
 
 
 def test_mm_deltas_appear_on_mm_case():
     case = _Case(multimaterial=True)
-    results = {"science": _fail("s"), "x1130": _ok("x"), "main": _ok("m")}
+    results = {"v0": _fail("s"), "v1": _ok("x"), "v2": _ok("m")}
     section = format_for_case(case, results, {})
-    assert "x1130-mm-pressure-gate" in section
-    assert "mm-transition-count-divergence" in section
+    assert "v1-mm-pressure-gate" in section
 
 
-def test_science_keyerror_only_when_science_failed():
+def test_v0_keyerror_only_when_v0_failed():
     case = _Case(multimaterial=False)
-    section_ok = format_for_case(case, {"science": _ok("s"), "main": _ok("m")}, {})
-    assert "science-keyerror" not in section_ok
-    section_fail = format_for_case(case, {"science": _fail("s"), "main": _ok("m")}, {})
-    assert "science-keyerror" in section_fail
+    section_ok = format_for_case(case, {"v0": _ok("s"), "v2": _ok("m")}, {})
+    assert "v0-keyerror" not in section_ok
+    section_fail = format_for_case(case, {"v0": _fail("s"), "v2": _ok("m")}, {})
+    assert "v0-keyerror" in section_fail
 
 
 def test_dfs_and_gap_closure_deltas_only_when_both_modern_pipelines_ok():
     case = _Case(multimaterial=False)
-    section_only_main = format_for_case(case, {"main": _ok("m"), "x1130": _fail("x")}, {})
-    assert "dfs-extra-pass" not in section_only_main
-    section_both = format_for_case(case, {"main": _ok("m"), "x1130": _ok("x")}, {})
+    section_only_v2 = format_for_case(case, {"v2": _ok("m"), "v1": _fail("x")}, {})
+    assert "dfs-extra-pass" not in section_only_v2
+    section_both = format_for_case(case, {"v2": _ok("m"), "v1": _ok("x")}, {})
     assert "dfs-extra-pass" in section_both
 
 
 def test_section_starts_with_documented_header():
     case = _Case(multimaterial=True)
-    section = format_for_case(case, {"x1130": _ok("x"), "main": _ok("m")}, {})
+    section = format_for_case(case, {"v1": _ok("x"), "v2": _ok("m")}, {})
     assert section.startswith("## Known residual deltas\n")

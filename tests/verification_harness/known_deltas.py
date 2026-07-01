@@ -40,8 +40,8 @@ def _mm(case, _results, _diffs) -> bool:
     return bool(getattr(case, "multimaterial", False))
 
 
-def _science_failed(_case, results, _diffs) -> bool:
-    s = results.get("science")
+def _v0_failed(_case, results, _diffs) -> bool:
+    s = results.get("v0")
     return bool(s and s.status == "FAIL")
 
 
@@ -51,8 +51,8 @@ def _always(_case, _results, _diffs) -> bool:
 
 KNOWN_DELTAS: list[KnownDelta] = [
     KnownDelta(
-        id="x1130-flow-override",
-        title="x1130 ignores its own `--flow` argument (mitigated)",
+        id="v1-flow-override",
+        title="v1 ignores its own `--flow` argument (mitigated)",
         description=(
             "`xcavate_11_30_25.py` line 3705 hardcodes "
             "`flow = 0.1609429886081009`, overriding the `--flow` argparse "
@@ -65,100 +65,67 @@ KNOWN_DELTAS: list[KnownDelta] = [
     ),
     KnownDelta(
         id="preamble-line-shift",
-        title="x1130 emits an extra leading `G90` before its first `G92`",
+        title="v1 emits an extra leading `G90` before its first `G92`",
         description=(
-            "x1130's preamble is `G90 / G92 .. / G90 F<feed> / ...`; main's is "
+            "v1's preamble is `G90 / G92 .. / G90 F<feed> / ...`; v2's is "
             "`G92 .. / G90 F<feed> / ...`. This shifts every subsequent line "
             "index by 1 between the two streams. The harness compensates via "
             "`align_on_first_g1=True` in `numerical_diff`, so reported "
             "deviations are post-alignment and reflect actual trajectory drift "
             "rather than the index shift."
         ),
-        applies=_both_ok("x1130", "main"),
+        applies=_both_ok("v1", "v2"),
     ),
     KnownDelta(
-        id="x1130-mm-pressure-gate",
-        title="x1130's multimaterial-pressure writer is gated on `custom_gcode == 1` (patched)",
+        id="v1-mm-pressure-gate",
+        title="v1's multimaterial-pressure writer is gated on `custom_gcode == 1` (patched)",
         description=(
             "Script line 4717 reads "
             "`if multimaterial == 1 and custom_gcode == 1 and printer_type == 0:`. "
             "Without `--custom 1` (and the auxiliary `inputs/custom/*.txt` "
-            "template files it would then read), x1130 silently skipped MM "
+            "template files it would then read), v1 silently skipped MM "
             "emission and only wrote `gcode_SM_pressure.txt` even for MM "
             "inputs — leading to `mm_trans=0` in our metrics. "
-            "`x1130_runner.py` rewrites that gate in memory so the MM writer "
+            "`v1_runner.py` rewrites that gate in memory so the MM writer "
             "runs without requiring custom template files. After the patch, "
-            "x1130 emits 184 nozzle transitions on the 61-vessel network "
-            "(vs main's 206)."
+            "v1 emits 184 nozzle transitions on the 61-vessel network "
+            "(matching v2, which also emits 184; v1 and v2 are bit-identical here)."
         ),
         applies=_mm,
     ),
     KnownDelta(
         id="dfs-extra-pass",
-        title="main's iterative DFS produces one more raw pass than x1130's recursive DFS",
+        title="v2's iterative DFS produces one more raw pass than v1's recursive DFS",
         description=(
-            "main uses an explicit-stack iterative DFS in "
+            "v2 uses an explicit-stack iterative DFS in "
             "`xcavate/core/pathfinding.py` with reversed neighbour push order; "
-            "x1130 uses a recursive DFS that iterates `graph[node]` in native "
-            "order. On the 4-vessel network, main produces **14 raw passes** "
+            "v1 uses a recursive DFS that iterates `graph[node]` in native "
+            "order. On the 4-vessel network, v2 produces **14 raw passes** "
             "(lengths sorted: 5, 11, 12, 13, 20, 33, 68, 97, 113, 163, 203, "
-            "227, 397, 418) while x1130 produces **13**. The extra pass is "
-            "typically a 2-node bridge through a branchpoint that x1130 "
+            "227, 397, 418) while v1 produces **13**. The extra pass is "
+            "typically a 2-node bridge through a branchpoint that v1 "
             "absorbs into an adjacent pass. Same vessels are printed; the "
             "split boundary differs."
         ),
-        applies=_both_ok("x1130", "main"),
+        applies=_both_ok("v1", "v2"),
     ),
     KnownDelta(
         id="gap-closure-branchpoint-distribution",
         title="`run_full_gap_closure_pipeline` distributes branchpoint nodes differently",
         description=(
             "After subdivision (which is algorithmically equivalent in both "
-            "pipelines), main's gap-closure prepends/appends shared "
-            "branchpoint nodes to stitch passes — e.g. main pass 1 starts "
+            "pipelines), v2's gap-closure prepends/appends shared "
+            "branchpoint nodes to stitch passes — e.g. v2 pass 1 starts "
             "with `[1571, 1572, ...]` even though `subdivide_passes` returned "
             "`[1572, ...]`. Pass 2 ends with the same node it started with "
-            "(`[985, 489, ..., 393, 985]`). x1130's gap closure makes the "
+            "(`[985, 489, ..., 393, 985]`). v1's gap closure makes the "
             "same kind of additions but distributes them across different "
             "passes, leaving one fewer net pass. Net effect: same printed "
             "segments and same vessel coverage, slightly different pass "
             "boundaries and therefore slightly different jog choreography "
             "between passes."
         ),
-        applies=_both_ok("x1130", "main"),
-    ),
-    KnownDelta(
-        id="mm-transition-count-divergence",
-        title="main emits more multimaterial transitions than x1130",
-        description=(
-            "On the 61-vessel multimaterial network main emits **205** "
-            "nozzle switches while x1130 emits **183** — an ~12% surplus. "
-            "The per-switch choreography is byte-identical between the two "
-            "pipelines (`G91 G1 A60 B60 F5 / G91 G1 X-103 F10 / "
-            "G91 G1 Y0.5 F5 / G91 G1 A-60 B-60`); only the **count** and "
-            "**positions** of switches differ. Cause: main's "
-            "`_subdivide_by_material` in `xcavate/pipeline.py` splits passes "
-            "at material transitions more aggressively than x1130's "
-            "Branchpoint-Condition analogue, producing extra "
-            "arterial↔venous flips. When the harness aligns the two streams "
-            "by index, at some row main is mid-shuttle (`G91 G1 X-103`) "
-            "while x1130 is on a normal print move at X ≈ +103 — giving "
-            "the characteristic ~206 mm `max_xyz_dev`. Functionally the "
-            "same vessels are printed in both materials; main just switches "
-            "between printheads more often.\n\n"
-            "Two algorithmic divergences in this path have been reconciled "
-            "with x1130 (with regression tests):\n"
-            "  • outlier-swap order in `_subdivide_by_material` is now "
-            "first → middle (cascading) → last\n"
-            "  • `classify_passes_by_material` now uses the **second** node "
-            "of each pass, matching `xcavate_11_30_25.py:4762`\n"
-            "Neither fix moved the +22 transition surplus on the 61-vessel "
-            "network, indicating a third difference remains (likely in the "
-            "post-subdivide reclassification or in how same-material "
-            "adjacent sub-passes are merged). Investigation paused; "
-            "residual is documented rather than chased further."
-        ),
-        applies=_mm,
+        applies=_both_ok("v1", "v2"),
     ),
     KnownDelta(
         id="branchpoint-tiebreak-large-network",
@@ -168,18 +135,18 @@ KNOWN_DELTAS: list[KnownDelta] = [
             "interpolated points), some vessel endpoints have two or more "
             "candidate \"daughter\" nodes at *exactly equal* distance. Each "
             "pipeline uses a different tiebreaker:\n"
-            "  • main → `scipy.cKDTree.query(point, k=N)` (binary tree)\n"
-            "  • x1130 → nested-loop brute force with strict-less comparison\n"
-            "  • science → nested-loop brute force with slightly different "
-            "loop ordering than x1130\n"
+            "  • v2 → `scipy.cKDTree.query(point, k=N)` (binary tree)\n"
+            "  • v1 → nested-loop brute force with strict-less comparison\n"
+            "  • v0 → nested-loop brute force with slightly different "
+            "loop ordering than v1\n"
             "When ties occur, the three implementations pick different "
             "daughter nodes. On the 4/9/14-vessel networks ties are rare, "
-            "so the graphs match exactly (`x1130 ↔ main = 0` mm). On the "
+            "so the graphs match exactly (`v1 ↔ v2 = 0` mm). On the "
             "500-vessel network ~38 adjacency-list entries differ between "
-            "main and x1130 — different branchpoint daughter pairs cascade "
+            "v2 and v1 — different branchpoint daughter pairs cascade "
             "through DFS into a different pass order, producing the "
-            "~70 mm `max_xyz_dev` between every pair (sci↔x1130 = 71.16, "
-            "sci↔main = 69.94, x1130↔main = 70.19). All three pipelines "
+            "~70 mm `max_xyz_dev` between every pair (v0↔v1 = 71.16, "
+            "v0↔v2 = 69.94, v1↔v2 = 70.19). All three pipelines "
             "still print the same vessels with the same total path; only "
             "the visit order differs.\n\n"
             "To force byte-equivalence we'd need to add an explicit "
@@ -188,10 +155,10 @@ KNOWN_DELTAS: list[KnownDelta] = [
             "implementations. None of the three is currently \"correct\" — "
             "they're all valid choices for the same geometric configuration."
         ),
-        applies=_both_ok("x1130", "main"),
+        applies=_both_ok("v1", "v2"),
     ),
     KnownDelta(
-        id="science-keyerror",
+        id="v0-keyerror",
         title="Science.py crashes internally on every verification network",
         description=(
             "`xcavate_Science.py` (June 2023) raises `KeyError` at script "
@@ -200,11 +167,11 @@ KNOWN_DELTAS: list[KnownDelta] = [
             "The error is internal — argparse already passed — and the key "
             "missing in `append_first_branch` is the loop variable `i` "
             "before the dict has been populated for that pass. Modern "
-            "pipelines (x1130, main) fixed this. The harness reports "
+            "pipelines (v1, v2) fixed this. The harness reports "
             "Science.py as FAIL on every case and does not produce diff "
             "rows for it."
         ),
-        applies=_science_failed,
+        applies=_v0_failed,
     ),
 ]
 

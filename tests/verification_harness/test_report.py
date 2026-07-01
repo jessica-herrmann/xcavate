@@ -46,19 +46,19 @@ def _diff(p1, p2):
 def test_write_case_report_creates_markdown(tmp_path):
     case_dir = tmp_path / "case_a"
     case_dir.mkdir()
-    results = {"science": _ok("science"), "x1130": _ok("x1130"), "main": _ok("main")}
-    diffs = {("science", "x1130"): _diff("science", "x1130")}
+    results = {"v0": _ok("v0"), "v1": _ok("v1"), "v2": _ok("v2")}
+    diffs = {("v0", "v1"): _diff("v0", "v1")}
     write_case_report(case_dir, "case_a", results, diffs)
     md = (case_dir / "report.md").read_text()
     assert "# Case `case_a`" in md
-    assert "science" in md
+    assert "v0" in md
     assert "max_xyz_dev" in md
 
 
 def test_append_summary_row_writes_header_once(tmp_path):
     summary = tmp_path / "summary.md"
-    results = {"science": _ok("science"), "x1130": _ok("x1130"), "main": _ok("main")}
-    diffs = {("science", "x1130"): _diff("science", "x1130")}
+    results = {"v0": _ok("v0"), "v1": _ok("v1"), "v2": _ok("v2")}
+    diffs = {("v0", "v1"): _diff("v0", "v1")}
     append_summary_row(summary, "case_a", results, diffs)
     append_summary_row(summary, "case_b", results, diffs)
     text = summary.read_text()
@@ -73,11 +73,11 @@ def test_failed_pipeline_renders_FAIL(tmp_path):
     case_dir = tmp_path / "case_b"
     case_dir.mkdir()
     failed = PipelineResult(
-        name="x1130", status="FAIL",
+        name="v1", status="FAIL",
         gcode_paths=[], metrics=None,
         stderr_excerpt="boom\n", exit_code=1,
     )
-    results = {"science": _ok("science"), "x1130": failed, "main": _ok("main")}
+    results = {"v0": _ok("v0"), "v1": failed, "v2": _ok("v2")}
     write_case_report(case_dir, "case_b", results, {})
     md = (case_dir / "report.md").read_text()
     assert "FAIL" in md
@@ -95,22 +95,21 @@ def test_known_deltas_section_appears_when_case_provided(tmp_path):
 
     case_dir = tmp_path / "case_with_deltas"
     case_dir.mkdir()
-    results = {"science": _ok("science"), "x1130": _ok("x1130"), "main": _ok("main")}
-    diffs = {("x1130", "main"): _diff("x1130", "main")}
+    results = {"v0": _ok("v0"), "v1": _ok("v1"), "v2": _ok("v2")}
+    diffs = {("v1", "v2"): _diff("v1", "v2")}
     write_case_report(
         case_dir, "case_with_deltas", results, diffs, case=_Case(multimaterial=True),
     )
     md = (case_dir / "report.md").read_text()
     assert "## Known residual deltas" in md
     # multimaterial-specific deltas should appear for an MM case
-    assert "x1130-mm-pressure-gate" in md
-    assert "mm-transition-count-divergence" in md
+    assert "v1-mm-pressure-gate" in md
 
 
 def test_known_deltas_section_omitted_when_no_case(tmp_path):
     case_dir = tmp_path / "case_legacy"
     case_dir.mkdir()
-    results = {"main": _ok("main")}
+    results = {"v2": _ok("v2")}
     write_case_report(case_dir, "case_legacy", results, {})
     md = (case_dir / "report.md").read_text()
     assert "## Known residual deltas" not in md

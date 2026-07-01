@@ -1,6 +1,7 @@
 """Pipeline registry, case discovery, and per-pipeline arg builders."""
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,12 +12,12 @@ from .synth_io import synthesize_inletoutlet
 
 # Legacy scripts vendored in-repo for full reproducibility. Each is wrapped
 # by a runner that applies in-memory patches at exec time — see the runner
-# files (`science_runner.py`, `x1130_runner.py`) for the rationale on each
+# files (`v0_runner.py`, `v1_runner.py`) for the rationale on each
 # patch and the original commits where they landed.
-SCIENCE_SCRIPT = Path(__file__).parent / "legacy_scripts" / "xcavate_Science.py"
-X1130_SCRIPT = Path(__file__).parent / "legacy_scripts" / "xcavate_11_30_25.py"
-SCIENCE_RUNNER = Path(__file__).parent / "science_runner.py"
-X1130_RUNNER = Path(__file__).parent / "x1130_runner.py"
+V0_SCRIPT = Path(__file__).parent / "legacy_scripts" / "xcavate_Science.py"
+V1_SCRIPT = Path(__file__).parent / "legacy_scripts" / "xcavate_11_30_25.py"
+V0_RUNNER = Path(__file__).parent / "v0_runner.py"
+V1_RUNNER = Path(__file__).parent / "v1_runner.py"
 
 
 @dataclass
@@ -27,7 +28,11 @@ class Case:
     slug: str
 
 
-XCAVATE_REPO = Path("/Users/sohams/X-CAVATE")
+# Repo root is three levels up: pipelines.py -> verification_harness -> tests -> repo.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+XCAVATE_REPO = REPO_ROOT
+# Verification data lives at data/verification/; override with XCAVATE_VERIF_DATA.
+VERIF_ROOT = Path(os.environ.get("XCAVATE_VERIF_DATA", REPO_ROOT / "data" / "verification"))
 
 
 @dataclass
@@ -48,8 +53,8 @@ CANONICAL_PARAMS: dict = {
     "container_z": 50.0,
     "print_speed": 1.0,
     "jog_speed": 5.0,
-    # Match x1130's hardcoded flow (script line 3705) so feedrate diffs don't
-    # absorb a constant 1.265× multiplier. main honors --flow; x1130 ignores
+    # Match v1's hardcoded flow (script line 3705) so feedrate diffs don't
+    # absorb a constant 1.265× multiplier. v2 honors --flow; v1 ignores
     # its own --flow argument and uses 0.1609429886081009 unconditionally.
     "flow": 0.1609429886081009,
     "dwell_start": 0.08,
@@ -128,7 +133,7 @@ def discover_cases(verification_root: Path) -> list[Case]:
     return cases
 
 
-def build_args_science(case: Case, params: dict) -> list[str]:
+def build_args_v0(case: Case, params: dict) -> list[str]:
     return [
         "--network_file", str(case.network),
         "--inletoutlet_file", str(case.inletoutlet),
@@ -149,7 +154,7 @@ def build_args_science(case: Case, params: dict) -> list[str]:
     ]
 
 
-def build_args_x1130(case: Case, params: dict) -> list[str]:
+def build_args_v1(case: Case, params: dict) -> list[str]:
     return [
         "--network_file", str(case.network),
         "--inletoutlet_file", str(case.inletoutlet),
@@ -177,8 +182,8 @@ def build_args_x1130(case: Case, params: dict) -> list[str]:
     ]
 
 
-def build_args_main(case: Case, params: dict) -> list[str]:
-    return build_args_x1130(case, params) + [
+def build_args_v2(case: Case, params: dict) -> list[str]:
+    return build_args_v1(case, params) + [
         "--convert_factor", str(params["convert_factor"]),
         "--algorithm", "dfs",
         "--reorder_passes", "0",
@@ -188,7 +193,7 @@ def build_args_main(case: Case, params: dict) -> list[str]:
     ]
 
 
-def _locate_science(cwd: Path, case: Case) -> list[Path]:
+def _locate_legacy(cwd: Path, case: Case) -> list[Path]:
     """Return Science.py gcode files, MM first for multimaterial cases."""
     sm = cwd / "gcode.txt"
     mm = cwd / "gcode_multimaterial.txt"
@@ -218,24 +223,24 @@ def _locate_modern(cwd: Path, case: Case) -> list[Path]:
 
 PIPELINES: list[Pipeline] = [
     Pipeline(
-        name="science",
-        label="xcavate_Science.py (Jun 2023) [logging bug patched]",
-        invocation=["python", str(SCIENCE_RUNNER)],
-        build_args=build_args_science,
-        locate_gcode=_locate_science,
+        name="v0",
+        label="v0 — xcavate_Science.py (Jun 2023) [logging bug patched]",
+        invocation=["python", str(V0_RUNNER)],
+        build_args=build_args_v0,
+        locate_gcode=_locate_legacy,
     ),
     Pipeline(
-        name="x1130",
-        label="xcavate_11_30_25.py (Nov 2025) [MM-gate patched]",
-        invocation=["python", str(X1130_RUNNER)],
-        build_args=build_args_x1130,
+        name="v1",
+        label="v1 — xcavate_11_30_25.py (Nov 2025) [MM-gate patched]",
+        invocation=["python", str(V1_RUNNER)],
+        build_args=build_args_v1,
         locate_gcode=_locate_modern,
     ),
     Pipeline(
-        name="main",
-        label="sohams-MASS/X-CAVATE main (local source)",
+        name="v2",
+        label="v2 — jessica-herrmann/xcavate xcavate/ package (local source)",
         invocation=["python", "-m", "xcavate"],
-        build_args=build_args_main,
+        build_args=build_args_v2,
         locate_gcode=_locate_modern,
         # Force python to import from the local repo, not the installed
         # `xcavate-toolpath` package that may shadow it in site-packages.

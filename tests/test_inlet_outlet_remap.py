@@ -23,8 +23,9 @@ from xcavate.config import (
 from xcavate.pipeline import run_xcavate
 
 
-NETWORK = Path("/Users/sohams/X-CAVATE/Vascular Trees Verification/Figure 4 (F)/network_0_b_splines_4_vessels.txt")
-IOC = Path("/Users/sohams/X-CAVATE/Vascular Trees Verification/Figure 4 (F)/network_inlet_outlet_4_vessels.txt")
+_VERIF = Path(__file__).resolve().parents[1] / "data" / "verification" / "Figure 4 (F)"
+NETWORK = _VERIF / "network_0_b_splines_4_vessels.txt"
+IOC = _VERIF / "network_inlet_outlet_4_vessels.txt"
 
 
 def test_outlet_node_resolves_to_post_interp_endpoint():

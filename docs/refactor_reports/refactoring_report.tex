@@ -89,12 +89,12 @@
 {\large \original{} $\longrightarrow$ \refactored{} Package\par}
 \vspace{3cm}
 \begin{tabular}{rl}
-\textbf{Repository:} & \texttt{sohams-MASS/X-CAVATE} \\
-\textbf{Branch:} & \texttt{main} \\
+\textbf{Repository:} & \texttt{jessica-herrmann/xcavate} \\
+\textbf{Branch:} & \texttt{xcavate-v2} \\
 \textbf{Date:} & March 31, 2026 \\
 \textbf{Version:} & 2.1.0 \\
 \textbf{Commits:} & 75 total \\
-\textbf{Status:} & Production-ready, all 95 tests passing \\
+\textbf{Status:} & Production-ready, all 117 tests passing \\
 \end{tabular}
 \vfill
 {\small Prepared for engineering review. This document covers architecture, algorithmic changes,\\performance benchmarks, and correctness verification.\par}
@@ -106,18 +106,18 @@
 % ===== EXECUTIVE SUMMARY =====
 \section{Executive Summary}
 
-The X-CAVATE codebase has been transformed from a single 5,568-line monolithic Python script into a modular package comprising 28 source files (6,741 lines) organized into 7 subpackages, accompanied by a comprehensive test suite of 95 tests across 2,364 lines. The refactoring achieves:
+The X-CAVATE codebase has been transformed from a single 5,568-line monolithic Python script into a modular package comprising 28 source files (6,741 lines) organized into 7 subpackages, accompanied by a comprehensive test suite of 117 tests across 2,773 lines, plus a separate three-way verification harness (45 tests). The refactoring achieves:
 
 \begin{itemize}[leftmargin=2em]
     \item \textbf{Modular architecture:} 0 classes, 3 functions $\rightarrow$ 22 classes, 130 functions across well-defined modules.
     \item \textbf{Algorithmic optimization:} Gap closure pipeline reduced from \bigO{P^2 \times N} to \bigO{P \times N}, yielding up to \textbf{144$\times$ speedup} at 500 passes.
-    \item \textbf{Correctness guarantee:} Numerically identical output on real data (\texttt{tree\_Test2.txt}) verified across all pipeline stages---both SM and MM---with default settings. Only cosmetic formatting differs (trailing whitespace, trailing decimal zeros).
+    \item \textbf{Correctness guarantee:} A three-way harness (2023 script v0, its 2025 fork v1, and this refactor v2) confirms v2 is bit-identical to the v1 monolith it refactors on six of seven verification networks; the seventh (500-vessel) differs only in pass \emph{order} via a documented branchpoint tiebreak (same geometry, same total path). Remaining differences are cosmetic formatting.
     \item \textbf{Full backward compatibility:} All 57 original CLI arguments preserved; identical command-line interface.
-    \item \textbf{Comprehensive test coverage:} 95 tests covering unit, integration, stress, edge-case, and performance benchmarks.
+    \item \textbf{Comprehensive test coverage:} 117 tests covering unit, integration, stress, edge-case, and performance benchmarks, plus a 45-test verification harness.
     \item \textbf{Robustness improvements:} Iterative DFS (no recursion depth limits), KD-tree spatial indexing, structured error handling.
 \end{itemize}
 
-No mathematical or algorithmic logic was altered---all changes are structural, organizational, and performance-related. The refactored code produces numerically identical output to the original for all tested inputs with default settings (cosmetic formatting differences only). An optional nearest-neighbor pass reordering feature (disabled by default) can be enabled to minimize nozzle travel; see Section~\ref{sec:equivalence-note} for details.
+No mathematical or algorithmic logic was altered---all changes are structural, organizational, and performance-related. With default settings the refactored code produces numerically identical output to the monolith it refactors on every verification network except the dense 500-vessel case, where equidistant-branchpoint ties are broken differently (KD-tree vs.\ brute force), yielding a different pass order but the same vessels and total path (see Section~\ref{sec:equivalence-note}). Remaining differences are cosmetic formatting only. An optional nearest-neighbor pass reordering feature (disabled by default) can further minimize nozzle travel.
 
 % ===== GUIDING DESIGN PHILOSOPHY =====
 \section{Guiding Design Philosophy}
@@ -131,9 +131,9 @@ The redesign of X-CAVATE was approached with three guiding questions applied to 
 Equivalence was established at three levels:
 
 \begin{itemize}[leftmargin=2em]
-    \item \textbf{Core pipeline stages:} Graph construction, pathfinding, gap closure, pass subdivision, multimaterial classification, and speed calculation produce identical results to the original on all tested inputs. Output files are numerically identical with only cosmetic formatting differences (trailing whitespace, trailing decimal zeros).
+    \item \textbf{Core pipeline stages:} Graph construction, pathfinding, gap closure, pass subdivision, multimaterial classification, and speed calculation produce identical results to the original on the verification networks, with the single documented 500-vessel pass-ordering exception. Output files are numerically identical with only cosmetic formatting differences (trailing whitespace, trailing decimal zeros).
     \item \textbf{Function-by-function:} Each of the 7 optimized gap-closure functions was tested against a re-implementation of the original's nested-loop algorithm on a multi-branch test network. All outputs match.
-    \item \textbf{Automated regression:} 95 tests verify invariants, boundary conditions, and output correctness to guard against regressions.
+    \item \textbf{Automated regression:} 117 tests verify invariants, boundary conditions, and output correctness, backed by a 45-test, seven-network harness comparing v0/v1/v2 end-to-end.
 \end{itemize}
 
 Where behavioral equivalence required special care---such as last-match-wins overwrite semantics in \texttt{close\_gaps\_condition0}, cascade marking in \texttt{\_remove\_redundant\_single\_node\_passes}, and iteration order of set-based indices---the optimized code explicitly replicates the original's behavior (see Section~\ref{sec:gap-closure-detail} for details). These are not approximations; they are verified exact reproductions.
@@ -204,7 +204,7 @@ KD-tree spatial indexing & \checkmark & & \\
 Modular architecture & & \checkmark & \checkmark \\
 Template Method G-code & & \checkmark & \checkmark \\
 Parameterized gap closure & & \checkmark & \checkmark \\
-95-test suite & & \checkmark & \checkmark \\
+117-test suite & & \checkmark & \checkmark \\
 Streamlit GUI & \checkmark & & \\
 Calibration module & \checkmark & & \\
 Pass reordering & \checkmark & & \\
@@ -223,8 +223,8 @@ With respect to the three guiding questions, the following guarantee holds:
 
 \begin{center}
 \fbox{\parbox{0.85\textwidth}{\centering
-\textbf{With default settings, all outputs produced by the refactored X-CAVATE code are numerically and functionally identical to the original monolithic script for the same input.}\\[0.5em]
-Verified on \texttt{tree\_Test2.txt}: all numerical values, pass contents, pass ordering, and G-code commands match exactly. The only differences are cosmetic formatting (trailing whitespace, trailing decimal zeros, G-code comment style). No mathematical or algorithmic logic was altered.
+\textbf{With default settings, the refactored X-CAVATE code reproduces the output of the monolith it refactors---bit-identically on six of seven verification networks.}\\[0.5em]
+Verified by a three-way harness (v0/v1/v2) across seven real networks: on six, v2's G-code trajectories are bit-identical to v1 (numerical values, pass contents, ordering, and commands all match; only cosmetic formatting differs). On the dense 500-vessel network, equidistant-branchpoint ties are resolved differently, producing a different pass \emph{order} (same vessels, same total path). No mathematical or algorithmic logic was altered.
 }}
 \end{center}
 
@@ -290,11 +290,11 @@ The script executes sequentially through 10 major stages, each directly modifyin
 \textbf{Metric} & \textbf{Value} \\
 \midrule
 Total source lines & 6,741 (28 files) \\
-Total test lines & 2,364 (8 files) \\
+Total test lines & 2,773 (11 files) \\
 Functions defined & 130 \\
 Classes defined & 22 \\
 Subpackages & 7 (\texttt{core}, \texttt{io}, \texttt{io/gcode}, \texttt{spatial}, \texttt{viz}, \texttt{gui}, \texttt{calibration}) \\
-Test count & 95 \\
+Test count & 117 \\
 Design patterns used & 14 \\
 \bottomrule
 \end{tabular}
@@ -721,76 +721,118 @@ The original script fails with \texttt{RecursionError: maximum recursion depth e
 
 \subsection{Methodology}
 
-Correctness was verified at three levels:
+Correctness is verified by a three-way pipeline harness
+(\texttt{tests/verification\_harness/}) that compares three generations of
+X-CAVATE on seven real vascular networks drawn from the published figures:
 
-\begin{enumerate}[leftmargin=2em]
-    \item \textbf{Full pipeline on real data:} Run the complete pipeline on \texttt{tree\_Test2.txt} with the pre-optimization gap closure code and the optimized code. Compare all output files byte-by-byte.
-    \item \textbf{Function-by-function unit comparison:} Re-implement the original nested-loop algorithms, run both on a multi-branch test network, and compare outputs.
-    \item \textbf{Automated test suite:} 95 tests covering unit, integration, regression, stress, edge-case, and performance scenarios.
-\end{enumerate}
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{v0} --- \texttt{xcavate\_Science.py} (Jun 2023), the earliest 4{,}249-line script.
+    \item \textbf{v1} --- \texttt{xcavate\_11\_30\_25.py} (Nov 2025), the 5{,}568-line monolith this report refactors.
+    \item \textbf{v2} --- the modular \texttt{xcavate/} package described in this report.
+\end{itemize}
+
+Each pipeline is invoked as an isolated subprocess on identical canonical
+parameters (\texttt{nozzle\_diameter=0.41}, \texttt{container\_height=50},
+pressure printer, and \texttt{flow} pinned to v1's hardcoded
+\texttt{0.1609429886081009} so feedrate differences cannot mask coordinate
+differences). The emitted G-code is parsed and diffed pairwise:
+\texttt{max\_xyz\_dev} is the largest XYZ deviation (mm) between matched
+\texttt{G1} moves after preamble alignment (\texttt{align\_on\_first\_g1}).
+A value of \textbf{0} denotes bit-identical \texttt{G1} trajectories;
+$5\times10^{-7}$ is float-printing noise only (different decimal rendering,
+no coordinate divergence).
 
 \subsection{Results}
 
-\subsubsection{Full Pipeline Output Comparison}
-
-With default settings (\texttt{reorder\_passes=False}), the original (with increased recursion limit) and refactored code were run on \texttt{tree\_Test2.txt} and all outputs compared. Results:
-
 \begin{table}[H]
 \centering
-\caption{File-by-file comparison: original vs refactored (default settings)}
-\begin{tabularx}{\textwidth}{lXl}
+\caption{Pairwise maximum XYZ deviation (mm) across the seven verification networks}
+\begin{tabular}{lrrr}
 \toprule
-\textbf{File} & \textbf{Differences} & \textbf{Status} \\
+\textbf{Network (vessels)} & \textbf{v0$\leftrightarrow$v1} & \textbf{v0$\leftrightarrow$v2} & \textbf{v1$\leftrightarrow$v2} \\
 \midrule
-\texttt{all\_coordinates\_SM.txt} & Trailing whitespace on pass headers only & Identical \\
-\texttt{x/y/z\_coordinates\_SM.txt} & Trailing zero formatting (e.g. \texttt{412.094} vs \texttt{412.0940}) & Numerically identical \\
-\texttt{gcode\_SM\_pressure.txt} & Comment formatting only (\texttt{;Print} vs \texttt{; Print}) & Functionally identical \\
-\texttt{changelog.txt} & Trailing whitespace only & Identical \\
-\texttt{graph.txt}, \texttt{special\_nodes.txt} & None & Identical \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-\textbf{No differences in numerical values, pass contents, pass ordering, or G-code commands.} All differences are cosmetic formatting: trailing whitespace on pass headers, trailing zeros in decimal output (e.g. 3 decimal digits vs 4 when \texttt{num\_decimals=4}), and minor comment style in G-code. The actual data---every coordinate, every pass, every printer command---is identical.
-
-\subsubsection{Function-by-Function Comparison}
-
-Each of the 5 optimized functions was tested against a re-implementation of the original algorithm on a Y-shaped multi-branch network with single-node passes:
-
-\begin{lstlisting}[language={},numbers=none,basicstyle=\ttfamily\small]
-1. find_disconnects            MATCH
-2. close_gaps_condition0       MATCH
-3. close_gaps_branchpoint (bw) MATCH
-4. close_gaps_branchpoint (fw) MATCH
-5. _remove_redundant_single    MATCH
-ALL FUNCTIONS IDENTICAL
-\end{lstlisting}
-
-\subsubsection{Test Suite}
-
-\begin{lstlisting}[language=bash,numbers=none]
-$ python -m pytest tests/ -v
-95 passed in 4.38s
-\end{lstlisting}
-
-\begin{table}[H]
-\centering
-\caption{Test suite breakdown}
-\begin{tabular}{llr}
-\toprule
-\textbf{File} & \textbf{Coverage Area} & \textbf{Tests} \\
-\midrule
-\texttt{test\_gap\_closure.py} & Index builders, conditions, regression, perf & 21 \\
-\texttt{test\_gcode.py} & All 3 printer types, custom codes, dwell & 11 \\
-\texttt{test\_graph.py} & Graph construction, branchpoints & 4 \\
-\texttt{test\_pathfinding.py} & Collision detector, DFS strategy & 3 \\
-\texttt{test\_preprocessing.py} & Interpolation, boundaries & 4 \\
-\texttt{test\_stress\_edge\_cases.py} & E2E real data, degenerate geometry, invariants & 52 \\
-\midrule
-\textbf{Total} & & \textbf{95} \\
+\texttt{cnet\_100\_points} (100)        & 32.47 & 32.47 & 0 \\
+\texttt{4\_vessels} (4)                  & 33 & 33 & 0 \\
+\texttt{9\_vessels} (9)                  & 38.41 & 38.41 & 0 \\
+\texttt{14\_vessels} (14)                & 35.17 & 35.17 & 0 \\
+\texttt{61\_vessels} (61, multimaterial) & 90 & 90 & $5\times10^{-7}$ \\
+\texttt{5-1-23} (multimaterial)          & 72.72 & 72.72 & $5\times10^{-7}$ \\
+\texttt{500\_vessels} (500)              & 71.16 & 69.94 & 70.19 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\textbf{v1 and v2 produce bit-identical \texttt{G1} trajectories} (0\,mm, or
+$5\times10^{-7}$ float noise on the multimaterial cases) on every network
+except the 500-vessel case. The larger v0$\leftrightarrow$\{v1,\,v2\}
+deviations are not a v2 regression: they reflect a genuine algorithm change
+between the 2023 script and the two later pipelines, which agree with each
+other exactly. Three latent correctness bugs surfaced in v2 during this
+comparison and were fixed (below) until v2 matched v1 move-for-move.
+
+\subsection{Residual difference: the 500-vessel branchpoint tiebreak}
+
+The 500-vessel network is the sole case where every pair diverges
+($\sim$70\,mm). The cause is not a computational error but a tie-breaking
+ambiguity: at branchpoints where two candidate daughter nodes are at
+\emph{exactly equal} distance from a vessel endpoint, each implementation
+resolves the tie differently---v2 via \texttt{scipy.cKDTree} (binary tree),
+v0/v1 via nested-loop brute force with slightly different iteration order.
+On the sparse 4--14 vessel networks ties essentially never occur, so the
+adjacency graphs match exactly and v1$\leftrightarrow$v2 is 0. On the dense
+500-vessel vasculature $\sim$10--20 branchpoints have effectively-tied
+candidates, producing different daughter assignments, a different DFS visit
+order, and $\sim$70\,mm of pass-ordering divergence. All three pipelines
+still print the same vessels with the same total path length; only the visit
+order differs. This is tracked as the
+\texttt{branchpoint-tiebreak-large-network} known delta in the harness;
+forcing byte-equivalence would require an explicit secondary tiebreaker
+(e.g.\ ``on equal distance, pick the smaller node index'') applied
+identically across all three implementations.
+
+\subsection{Bugs fixed in v2}
+
+The three-way comparison surfaced three latent bugs in v2, each now covered
+by a regression test:
+
+\begin{enumerate}[leftmargin=2em]
+    \item \textbf{Inlet/outlet matching ran pre-interpolation.} The
+    inlet/outlet indices were computed against the raw coordinate array but
+    used after \texttt{interpolate\_network} densified it, adding spurious
+    branchpoint edges and one extra raw-DFS pass per single-material
+    network. Fixed by matching after interpolation
+    (\texttt{tests/test\_inlet\_outlet\_remap.py}).
+    \item \textbf{\texttt{classify\_passes\_by\_material} used the last node,
+    not the second.} The docstring specified the second node (more robust to
+    material outliers at pass tails); the implementation indexed
+    \texttt{nodes[-1]}. Now matches the docstring and v1
+    (\texttt{tests/test\_multimaterial.py}).
+    \item \textbf{\texttt{\_subdivide\_by\_material} leaked swap state.}
+    Swapped artery/vein values were written back to the shared coordinate
+    column, so a swap for one pass corrupted break detection in another,
+    inflating material-transition splits. Fixed with a per-pass-local swap
+    dict, bringing v2's transition count into exact agreement with v1 (184 on
+    the 61-vessel network), so v1$\leftrightarrow$v2 output is bit-identical there
+    (\texttt{tests/test\_subdivide\_by\_material\_swap\_order.py}).
+\end{enumerate}
+
+A related fix let \texttt{classify\_passes\_by\_material} tolerate the empty
+sub-passes produced by \texttt{\_subdivide\_by\_material}, which had
+previously crashed the multimaterial path on the 61-vessel network.
+
+\subsection{Legacy-script reproducibility}
+
+The two legacy scripts are vendored unmodified under
+\texttt{tests/verification\_harness/legacy\_scripts/} and invoked through
+runners (\texttt{v0\_runner.py}, \texttt{v1\_runner.py}) that apply small
+in-memory patches for typo-class crashes (a logging \texttt{KeyError}, a
+malformed \texttt{open()} filename, and an unguarded \texttt{list.remove}),
+so the 2023/2025 pipelines can run end-to-end for comparison without editing
+the historical sources. The full harness is reproducible via
+\texttt{python -m tests.verification\_harness.run\_verification} followed by
+\texttt{collect\_artifacts} and \texttt{generate\_final\_report}; the current
+automated suite (\texttt{pytest tests/}) additionally locks in every fix
+above with unit, integration, regression, and stress tests.
 
 
 % ===== DESIGN PATTERNS =====
@@ -928,12 +970,12 @@ Key milestones across the development history:
 \textbf{Dimension} & \textbf{Original (\texttt{xcavate\_11\_30\_25.py})} & \textbf{Refactored (\texttt{xcavate/})} \\
 \midrule
 Architecture & Monolithic script & 7 subpackages, 28 files \\
-Lines of code & 5,568 & 6,741 (source) + 2,364 (tests) \\
+Lines of code & 5,568 & 6,741 (source) + 2,773 (tests) \\
 Functions & 3 & 130 \\
 Classes & 0 & 22 \\
 Design patterns & 0 & 14 \\
 Error handling & None & Structured exceptions \\
-Tests & None & 95 \\
+Tests & None & 117 \\
 DFS implementation & Recursive (crashes $>$1K nodes) & Iterative (no limit) \\
 Collision detection & $O(N)$ brute force & $O(k \log N)$ KD-tree \\
 Gap closure complexity & $O(P^2 \times N)$ & $O(P \times N)$ \\
@@ -941,7 +983,7 @@ Gap closure at 500 passes & $\sim$6.2 seconds & $\sim$43 ms (144$\times$ faster)
 Maximum feasible scale & $\sim$10K nodes & $>$500K nodes \\
 CLI compatibility & --- & 100\% backward compatible \\
 GUI & None & Streamlit web app \\
-Output correctness & Reference & Numerically identical; cosmetic formatting differences only \\
+Output correctness & Reference & Numerically identical (500-vessel: pass-order tiebreak only); cosmetic formatting otherwise \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -960,7 +1002,7 @@ The refactored code is 28 files across 7 subpackages. Finding where a specific b
 
 \subsection{More Code, Not Less}
 
-The refactored codebase is \textbf{larger}: 6,741 source lines + 2,364 test lines = 9,105 total, versus 5,568 in the original. The duplication was eliminated, but it was replaced with abstractions, docstrings, type annotations, and scaffolding that add their own weight. Whether this trade-off is worthwhile depends on the team---a solo developer who wrote the original may find the modular version harder to hold in their head.
+The refactored codebase is \textbf{larger}: 6,741 source lines + 2,773 test lines = 9,514 total, versus 5,568 in the original. The duplication was eliminated, but it was replaced with abstractions, docstrings, type annotations, and scaffolding that add their own weight. Whether this trade-off is worthwhile depends on the team---a solo developer who wrote the original may find the modular version harder to hold in their head.
 
 \subsection{Installation Complexity}
 
@@ -992,7 +1034,7 @@ The Streamlit GUI required multiple iterations to correctly synchronize calibrat
 
 \subsection{Test Suite May Impede Change}
 
-The 95-test suite is valuable for catching regressions, but tests tightly coupled to implementation details (e.g., exact pass structures, specific index contents) become a maintenance burden when the underlying algorithm changes. If a future developer improves the gap closure algorithm, they may spend more time updating tests than writing code.
+The 117-test suite is valuable for catching regressions, but tests tightly coupled to implementation details (e.g., exact pass structures, specific index contents) become a maintenance burden when the underlying algorithm changes. If a future developer improves the gap closure algorithm, they may spend more time updating tests than writing code.
 
 \subsection{Summary}
 
@@ -1021,13 +1063,13 @@ The refactoring solved real problems (crashes, performance, duplication), but it
 The refactoring of X-CAVATE from a monolithic script to a modular package was guided by three questions applied to every change:
 
 \begin{enumerate}[leftmargin=2em]
-    \item \textbf{Is the work produced equivalent to the original code?} Yes. With default settings, all output files are numerically and functionally identical to the original (cosmetic formatting differences only). An optional pass reordering feature (disabled by default) can be enabled to minimize nozzle travel distance. No mathematical or algorithmic logic was altered.
+    \item \textbf{Is the work produced equivalent to the original code?} Yes, with one documented exception. With default settings, v2's output is numerically and functionally identical to the v1 monolith on six of seven verification networks (cosmetic formatting differences only); on the 500-vessel network a branchpoint tiebreak yields a different pass order (same geometry and total path). An optional pass reordering feature (disabled by default) can further minimize nozzle travel. No mathematical or algorithmic logic was altered.
 
     \item \textbf{Is each performance improvement necessary or cosmetic?} Every optimization addresses a concrete, measurable problem: crashes on real data (recursive DFS), hours-long runtimes at scale (gap closure $O(P^2N)$), or maintenance burden that blocks development (6-way code duplication). No change was made for aesthetic reasons alone.
 
     \item \textbf{Who does this benefit?} Performance and robustness fixes (DFS, gap closure, KD-tree) benefit end users directly. Structural changes (modularity, tests, deduplication) benefit code maintenance and future development. New features (GUI, calibration, pass reordering) provide capabilities that did not exist before.
 \end{enumerate}
 
-The fundamental equivalence guarantee holds: with default settings, all output files are numerically and functionally identical to the original (cosmetic formatting differences only). This has been verified through full-pipeline real-data comparison on \texttt{tree\_Test2.txt}, function-by-function unit testing, and 95 automated regression tests.
+The fundamental equivalence guarantee holds with one documented exception: with default settings, v2's output is numerically and functionally identical to the v1 monolith on six of seven verification networks (cosmetic formatting only), differing on the 500-vessel case solely in pass order via a branchpoint tiebreak. This has been verified through a three-way (v0/v1/v2), seven-network G-code comparison harness, function-by-function unit testing, and 117 automated regression tests.
 
 \end{document}

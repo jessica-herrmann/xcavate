@@ -4,18 +4,18 @@ The 2023-vintage Science.py crashes with `KeyError` on every verification
 network. The errors are not in the algorithm itself — they're in the
 diagnostic-logging branches that copy-pasted dict references and forgot
 to rename them. This runner applies the minimum patches needed to get the
-script past those crashes so the harness can produce a real Science vs
+script past those crashes so the harness can produce a real v0 vs
 modern-pipeline comparison.
 
 Each patch is a one-character fix that mirrors a correct analogous line a
-few rows above. The original file at SCIENCE_SCRIPT is not modified.
+few rows above. The original file at V0_SCRIPT is not modified.
 """
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
-SCIENCE_SCRIPT = Path(__file__).parent / "legacy_scripts" / "xcavate_Science.py"
+V0_SCRIPT = Path(__file__).parent / "legacy_scripts" / "xcavate_Science.py"
 
 
 # Each tuple is (anchor_old, anchor_new). The anchor must be unique in the
@@ -39,7 +39,7 @@ _PATCHES = [
         "with open('changelog.txt', 'a') as f:",
     ),
     # Line ~766: unguarded graph[i].remove() in the daughter-pair dedup
-    # step. Same bug as x1130 (also at its line 878). On the 500-vessel
+    # step. Same bug as v1 (also at its line 878). On the 500-vessel
     # network some daughter pairs are not connected in the first place,
     # so the .remove() raises ValueError. Guard with `if in`.
     (
@@ -55,18 +55,18 @@ _PATCHES = [
 
 
 def main() -> int:
-    src = SCIENCE_SCRIPT.read_text()
+    src = V0_SCRIPT.read_text()
     for old, new in _PATCHES:
         if old not in src:
             sys.stderr.write(
-                f"science_runner: patch anchor not found:\n  {old!r}\n"
+                f"v0_runner: patch anchor not found:\n  {old!r}\n"
                 "Upstream may have changed; verify the patch list.\n"
             )
             return 2
         src = src.replace(old, new, 1)
-    sys.argv[0] = str(SCIENCE_SCRIPT)
-    exec(compile(src, str(SCIENCE_SCRIPT), "exec"),
-         {"__name__": "__main__", "__file__": str(SCIENCE_SCRIPT)})
+    sys.argv[0] = str(V0_SCRIPT)
+    exec(compile(src, str(V0_SCRIPT), "exec"),
+         {"__name__": "__main__", "__file__": str(V0_SCRIPT)})
     return 0
 
 

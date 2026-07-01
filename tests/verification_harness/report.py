@@ -88,7 +88,7 @@ def write_case_report(
 
 
 _SUMMARY_HEADER = (
-    "| case | science | x1130 | main | sci↔x1130 max_xyz | sci↔main max_xyz | x1130↔main max_xyz |\n"
+    "| case | v0 | v1 | v2 | v0↔v1 max_xyz | v0↔v2 max_xyz | v1↔v2 max_xyz |\n"
     "|---|---|---|---|---|---|---|\n"
 )
 
@@ -112,8 +112,8 @@ def append_summary_row(
         return f"{d.max_xyz_dev:.4g}" if d else "—"
 
     row = (
-        f"| {case_slug} | {_status('science')} | {_status('x1130')} | {_status('main')} | "
-        f"{_xyz('science', 'x1130')} | {_xyz('science', 'main')} | {_xyz('x1130', 'main')} |\n"
+        f"| {case_slug} | {_status('v0')} | {_status('v1')} | {_status('v2')} | "
+        f"{_xyz('v0', 'v1')} | {_xyz('v0', 'v2')} | {_xyz('v1', 'v2')} |\n"
     )
     with summary_path.open("a") as f:
         f.write(row)

@@ -12,23 +12,24 @@ from __future__ import annotations
 
 from pathlib import Path
 
-REPORTS = Path("/Users/sohams/X-CAVATE/tests/verification_harness/reports")
-OUT_DIR = Path("/Users/sohams/X-CAVATE/tests/verification_harness/final_report")
+_HARNESS_DIR = Path(__file__).resolve().parent
+REPORTS = _HARNESS_DIR / "reports"
+OUT_DIR = _HARNESS_DIR / "final_report"
 
 
 _NARRATIVE_HEADER = """# X-CAVATE Verification Harness — Final Report
 
 This report compares three X-CAVATE pipelines on the seven networks under
-`Vascular Trees Verification/` and documents the bugs found, fixes applied,
+`data/verification/` and documents the bugs found, fixes applied,
 and residual differences that remain.
 
 ## Pipelines
 
 | ID | Source | Notes |
 |---|---|---|
-| **science** | `xcavate_Science.py` (June 2023, Herrmann) | 5,568-line monolithic script. Three logging/typo bugs patched in `tests/verification_harness/science_runner.py` so it can run end-to-end. |
-| **x1130** | `xcavate_11_30_25.py` (Nov 30 2025) | 5,568-line fork of Science.py. Two patches in `tests/verification_harness/x1130_runner.py`: the `custom_gcode == 1` gate on multimaterial-pressure emission, and an unguarded `graph[i].remove()` on the 500-vessel network. |
-| **main** | `sohams-MASS/X-CAVATE` `xcavate/` package, branch `verification-harness` | Modular refactor with iterative DFS, KD-tree spatial queries, and dataclass-based config. Three correctness fixes applied during this work — see "Bugs fixed in main" below. |
+| **v0** | `xcavate_Science.py` (June 2023, Herrmann) | 4,249-line monolithic script. Three logging/typo bugs patched in `tests/verification_harness/v0_runner.py` so it can run end-to-end. |
+| **v1** | `xcavate_11_30_25.py` (Nov 30 2025) | 5,568-line fork of Science.py. Two patches in `tests/verification_harness/v1_runner.py`: the `custom_gcode == 1` gate on multimaterial-pressure emission, and an unguarded `graph[i].remove()` on the 500-vessel network. |
+| **v2** | `jessica-herrmann/xcavate` `xcavate/` package, branch `xcavate-v2` | Modular refactor with iterative DFS, KD-tree spatial queries, and dataclass-based config. Three correctness fixes applied during this work — see "Bugs fixed in v2" below. |
 
 The harness invokes each pipeline as a subprocess in an isolated working
 directory, parses the emitted G-code, computes aggregate metrics, and
@@ -37,7 +38,7 @@ so a missing leading `G90` doesn't shift the entire stream.
 
 ## Inputs
 
-Seven networks under `Vascular Trees Verification/`:
+Seven networks under `data/verification/`:
 
 | Network | Vessels | Type |
 |---|---:|---|
@@ -47,12 +48,12 @@ Seven networks under `Vascular Trees Verification/`:
 | `Figure 4 (F)/network_0_b_splines_14_vessels.txt` | 14 | single |
 | `Figure 2 (A-C), Figure 4 (G)/multimaterial_test_network_61_vessels.txt` | 61 | **multi** |
 | `Figure 2 (D-E)/5-1-23_multimaterial_network_0_b_splines.txt` | ~30 | **multi** |
-| `network_0_b_splines_500_vessels (1).txt` | 500 | single (orphan — synthesized inlet/outlet) |
+| `network_0_b_splines_500_vessels.txt` | 500 | single (orphan — synthesized inlet/outlet) |
 
 Canonical run parameters: `nozzle_diameter=0.41`, `container_height=50`,
-`flow=0.1609429886081009` (matched to x1130's hardcoded value), `print_speed=1`,
+`flow=0.1609429886081009` (matched to v1's hardcoded value), `print_speed=1`,
 `jog_speed=5`, `dwell_start=dwell_end=0.08`, `printer_type=0` (pressure),
-`convert_factor=10.0` (cm→mm — main only; the legacy scripts hardcode
+`convert_factor=10.0` (cm→mm — v2 only; the legacy scripts hardcode
 this).
 
 """
@@ -71,7 +72,7 @@ between pipelines, no actual coordinate divergence).
 
 
 _BUGS_FIXED_BLOCK = """
-## Bugs fixed in main (`sohams-MASS/X-CAVATE`)
+## Bugs fixed in v2 (`jessica-herrmann/xcavate`)
 
 1. **Inlet/outlet matching ran on the pre-interpolation 400-row coordinate
    array but the indices were used post-interpolation.** Fixed by moving
@@ -84,17 +85,17 @@ _BUGS_FIXED_BLOCK = """
    (`nodes[-1]`) but the docstring said "second node".** The second-node
    choice in xcavate_11_30_25.py is more robust against material outliers
    at the tail of long passes. Implementation now matches the docstring
-   and x1130's behavior (`xcavate/core/multimaterial.py`).
+   and v1's behavior (`xcavate/core/multimaterial.py`).
 
 3. **`_subdivide_by_material` wrote swapped artven values back to the
    shared `points[n, 4]` column.** Branchpoint nodes appear in multiple
    passes; a swap performed for pass A leaked the mutated value into
    pass B's break detection, producing extra material-transition splits.
-   x1130 keeps swap state in a per-pass-local `print_passes_processed_artven`
-   dict. Fix: main now uses an `artven_local` dict per pass and never
-   touches `points`. Result: dropped main's MM transition count from 205
-   to 183 on the 61-vessel network, exactly matching x1130
-   (`xcavate/pipeline.py:_subdivide_by_material`).
+   v1 keeps swap state in a per-pass-local `print_passes_processed_artven`
+   dict. Fix: v2 now uses an `artven_local` dict per pass and never
+   touches `points`. Result: v2's MM transition count now matches v1
+   exactly (184 on the 61-vessel network), so v1 and v2 emit bit-identical
+   G-code there (`xcavate/pipeline.py:_subdivide_by_material`).
 
 Each fix has a regression test under `tests/`:
 - `tests/test_inlet_outlet_remap.py`
@@ -117,49 +118,49 @@ After all the fixes above, the comparison stabilized at:
 
 | Pair | 4/9/14/cnet/100/61-vessel | 5-1-23 MM | 500-vessel |
 |---|---:|---:|---:|
-| **x1130 ↔ main** | **0** mm (or float-precision noise 5e-7) | 5e-7 | **70.19 mm** |
-| sci ↔ x1130 | 32–38 mm | 72.72 | 71.16 |
-| sci ↔ main | 32–38 mm | 72.72 | 69.94 |
+| **v1 ↔ v2** | **0** mm (or float-precision noise 5e-7) | 5e-7 | **70.19 mm** |
+| v0 ↔ v1 | 32–38 mm | 72.72 | 71.16 |
+| v0 ↔ v2 | 32–38 mm | 72.72 | 69.94 |
 
 The 500-vessel row stands out: every pair shows ~70 mm divergence, even
-though main↔x1130 is byte-identical on every smaller network.
+though v2↔v1 is byte-identical on every smaller network.
 
 ### Why every pair diverges on 500-vessel
 
 The graphs themselves differ. Comparing
-`reports/network_0_b_splines_500_vessels_1/main/outputs/graph/graph.txt`
-against the x1130 equivalent shows **38 lines of adjacency-list diff**
+`reports/network_0_b_splines_500_vessels/v2/outputs/graph/graph.txt`
+against the v1 equivalent shows **38 lines of adjacency-list diff**
 out of 127,812 lines (one entry per node × two pipelines). Examples:
 
 ```
 Node 8282:
-  main : [8282, 8283, 61712, 61713]   ← daughters {61712, 61713}
-  x1130: [8282, 8283, 47083, 61712]   ← daughters {47083, 61712}
+  v2 : [8282, 8283, 61712, 61713]   ← daughters {61712, 61713}
+  v1: [8282, 8283, 47083, 61712]   ← daughters {47083, 61712}
 
 Node 19250:
-  main : [19249, 19250, 19251]
-  x1130: [19249, 19250, 19251, 25451]  ← x1130 has extra edge to 25451
+  v2 : [19249, 19250, 19251]
+  v1: [19249, 19250, 19251, 25451]  ← v1 has extra edge to 25451
 
 Node 22435:
-  main : [19251, 22435, 25451]
-  x1130: [19251, 22434, 22435]
+  v2 : [19251, 22435, 25451]
+  v1: [19251, 22434, 22435]
 ```
 
-These aren't "x1130 forgot to remove an edge" patterns — they're
+These aren't "v1 forgot to remove an edge" patterns — they're
 *different daughter assignments at branchpoints*. Same number of
 neighbours, but different *which* node each pipeline picks as daughter.
 
 **Cause: branchpoint daughter-selection ties.** Each pipeline finds
 "nearest unvisited node in another vessel" with a different algorithm:
 
-- **main** — `scipy.cKDTree.query(point, k=N)` (KD-tree, binary)
-- **x1130** — nested-loop brute force with strict-less comparison
-- **science** — same brute-force, slightly different loop ordering
+- **v2** — `scipy.cKDTree.query(point, k=N)` (KD-tree, binary)
+- **v1** — nested-loop brute force with strict-less comparison
+- **v0** — same brute-force, slightly different loop ordering
 
 When two candidate nodes are at *exactly equal* distance from a vessel
 endpoint, the three implementations pick different ones. On 4–14 vessel
 networks the geometry is sparse and ties rarely happen (graphs match
-exactly → main↔x1130 = 0). On the 500-vessel dense vasculature, ~10–20
+exactly → v2↔v1 = 0). On the 500-vessel dense vasculature, ~10–20
 branchpoints have effectively-tied candidates → different daughter pairs
 → different adjacency edges → DFS visits in a different order → ~70 mm
 pass-ordering divergence in the gcode.
@@ -186,7 +187,7 @@ _LEGACY_PATCHES_BLOCK = """
 The two legacy scripts are not modified on disk. Each is invoked through
 a wrapper that applies in-memory patches before `exec`:
 
-### `science_runner.py` (3 patches)
+### `v0_runner.py` (3 patches)
 
 1. **`KeyError` in Branchpoint Condition #1 logging** (script line ~1781):
    the f-string referenced `append_first_branch[i]` inside a loop iterating
@@ -198,18 +199,18 @@ a wrapper that applies in-memory patches before `exec`:
    dedup (script line ~766): unguarded `graph[i].remove(daughter_to_remove)`.
    Fixed with an `if x in graph[i]:` guard.
 
-### `x1130_runner.py` (2 patches)
+### `v1_runner.py` (2 patches)
 
 1. **`gcode_MM_pressure.txt` never emitted** (script line 4717): the
    multimaterial-pressure writer was gated on `custom_gcode == 1`.
-   Without `--custom 1`, x1130 silently skipped MM emission and only
+   Without `--custom 1`, v1 silently skipped MM emission and only
    wrote `gcode_SM_pressure.txt`, reporting 0 nozzle transitions on
    multimaterial inputs. Fixed by dropping the `custom_gcode == 1`
    condition.
-2. **Same `graph[i].remove()` bug** as Science (script line ~878).
+2. **Same `graph[i].remove()` bug** as v0 (script line ~878).
    Fixed with the same `if x in graph[i]:` guard.
 
-x1130 also hardcodes `flow = 0.1609429886081009` at script line 3705,
+v1 also hardcodes `flow = 0.1609429886081009` at script line 3705,
 overriding its own `--flow` argparse value. This is not patched; the
 harness's `CANONICAL_PARAMS["flow"]` is set to the same value so all
 three pipelines compute feedrates on identical flow.
@@ -225,7 +226,7 @@ def parse_summary(path: Path) -> list[dict]:
         line = line.strip()
         if not line.startswith("|"):
             continue
-        if "case" in line and "science" in line.lower():
+        if "case" in line and "v0" in line.lower():
             continue
         if set(line.replace("|", "").strip()) <= set("-"):
             continue
@@ -234,12 +235,12 @@ def parse_summary(path: Path) -> list[dict]:
             continue
         rows.append({
             "case": cols[0],
-            "science": cols[1],
-            "x1130": cols[2],
-            "main": cols[3],
-            "sci_x1130_xyz": cols[4],
-            "sci_main_xyz": cols[5],
-            "x1130_main_xyz": cols[6],
+            "v0": cols[1],
+            "v1": cols[2],
+            "v2": cols[3],
+            "v0_v1_xyz": cols[4],
+            "v0_v2_xyz": cols[5],
+            "v1_v2_xyz": cols[6],
         })
     return rows
 
@@ -255,12 +256,12 @@ def _read_metric_lines_from_report(report_path: Path) -> list[str]:
 
 
 def render_results_table(rows: list[dict]) -> str:
-    out = ["| Case | science | x1130 | main | sci↔x1130 max_xyz | sci↔main max_xyz | x1130↔main max_xyz |",
+    out = ["| Case | v0 | v1 | v2 | v0↔v1 max_xyz | v0↔v2 max_xyz | v1↔v2 max_xyz |",
            "|---|---|---|---|---:|---:|---:|"]
     for r in rows:
         out.append(
-            f"| `{r['case']}` | {r['science']} | {r['x1130']} | {r['main']} | "
-            f"{r['sci_x1130_xyz']} | {r['sci_main_xyz']} | {r['x1130_main_xyz']} |"
+            f"| `{r['case']}` | {r['v0']} | {r['v1']} | {r['v2']} | "
+            f"{r['v0_v1_xyz']} | {r['v0_v2_xyz']} | {r['v1_v2_xyz']} |"
         )
     return "\n".join(out)
 
@@ -304,7 +305,7 @@ def main() -> None:
     body.append(
         "## Reproduction\n\n"
         "```bash\n"
-        "git checkout verification-harness\n"
+        "git checkout xcavate-v2\n"
         "pytest tests/  # 157 passed, 4 skipped\n"
         "python -m tests.verification_harness.run_verification --timeout 1800\n"
         "python -m tests.verification_harness.collect_artifacts\n"

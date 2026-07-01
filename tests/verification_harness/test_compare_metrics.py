@@ -24,7 +24,7 @@ def test_metrics_total_path_length_sums_g1_steps():
 
 
 def test_metrics_estimated_print_time_uses_feedrate():
-    # feedrate is in mm/s for legacy scripts and main with --speed_unit mm/s
+    # feedrate is in mm/s for legacy scripts and v2 with --speed_unit mm/s
     moves = parse_text(
         "G92 X0 Y0 Z0\nG1 X10 Y0 Z0 F2\n"  # 10 mm at 2 mm/s = 5 s
     )
