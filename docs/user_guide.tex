@@ -6,6 +6,7 @@
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{tabularx}
+\usepackage{xltabular}
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{xcolor}
@@ -118,7 +119,7 @@
     \vspace{-1cm}
     \textbf{\Huge X-CAVATE}\\[8pt]
     \LARGE GUI User Guide\\[6pt]
-    \large Version 2.0.0
+    \large Version 2.1.0
 }
 \author{}
 \date{\today}
@@ -132,7 +133,7 @@
 
 {\Huge \textbf{X-CAVATE}}\\[12pt]
 {\LARGE GUI User Guide}\\[20pt]
-{\large Version 2.0.0}\\[40pt]
+{\large Version 2.1.0}\\[40pt]
 
 {\large Convert vascular network geometries into collision-free\\[4pt]
 3D printer toolhead pathways and G-code.}
@@ -174,8 +175,8 @@ conda --version
     If not installed, download Miniconda from \url{https://docs.conda.io/en/latest/miniconda.html}.
     \item Clone the repository and enter the directory:
     \begin{lstlisting}
-git clone https://github.com/sohams-MASS/X-CAVATE.git
-cd X-CAVATE
+git clone https://github.com/jessica-herrmann/xcavate.git
+cd xcavate
     \end{lstlisting}
     \item Create and activate the conda environment:
     \begin{lstlisting}
@@ -832,7 +833,7 @@ The G-code filename suffix matches your selected printer type:
 
 \subsection{File Descriptions}
 
-\begin{longtable}{L{4cm} L{2cm} X}
+\begin{xltabular}{\textwidth}{L{4cm} L{2cm} X}
 \toprule
 \textbf{File} & \textbf{Directory} & \textbf{Description} \\
 \midrule
@@ -855,14 +856,14 @@ The G-code filename suffix matches your selected printer type:
 \code{network\_MM.html} & \code{plots/} & Interactive 3D visualization of MM print passes. \\
 \code{changelog.txt} & root & Log of all gap closure operations performed. \\
 \bottomrule
-\end{longtable}
+\end{xltabular}
 
 % ===================================================================
 \section{Troubleshooting}
 \label{sec:troubleshooting}
 % ===================================================================
 
-\begin{longtable}{L{4.5cm} X}
+\begin{xltabular}{\textwidth}{L{4.5cm} X}
 \toprule
 \textbf{Problem} & \textbf{Solution} \\
 \midrule
@@ -898,6 +899,6 @@ Ensure \gui{Generate plots} is enabled in the Advanced section. If disabled, plo
 Browser does not open &
 Navigate manually to \code{http://localhost:8501}. On remote servers, ensure port 8501 is forwarded. \\
 \bottomrule
-\end{longtable}
+\end{xltabular}
 
 \end{document}
