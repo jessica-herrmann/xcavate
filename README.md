@@ -196,7 +196,7 @@ There are 12 template files organized into four categories:
 
 | File | Purpose |
 |------|---------|
-| `dwell_code.txt` | Time delay ("dwell") at the start and end of each print pass. Deposits extra ink at junctions, improving connections via a process similar to "spot welding." |
+| `dwell_start.txt` / `dwell_end.txt` | G-code inserted at the start / end of each print pass to dwell (pause). Deposits extra ink at junctions, improving connections via a process similar to "spot welding." |
 
 **Example template content** (`start_extrusion_code.txt`):
 
@@ -337,7 +337,7 @@ nano inputs/custom/rest_pressure_printhead1.txt
 nano inputs/custom/rest_pressure_printhead2.txt
 
 # 3. Optional: dwell code for "spot welding" at junctions
-nano inputs/custom/dwell_code.txt
+nano inputs/custom/dwell_start.txt   # and inputs/custom/dwell_end.txt
 
 # 4. Run with --custom 1
 xcavate \
@@ -631,8 +631,8 @@ outputs/
 ## Project Structure
 
 ```
-X-CAVATE/
-├── xcavate/
+xcavate/
+├── xcavate/                     # Main package
 │   ├── __init__.py
 │   ├── __main__.py              # python -m xcavate entry point
 │   ├── cli.py                   # Command-line argument parsing
@@ -645,7 +645,8 @@ X-CAVATE/
 │   │   ├── pathfinding.py       # DFS with KD-tree collision detection
 │   │   ├── gap_closure.py       # Unified gap closure pipeline
 │   │   ├── postprocessing.py    # Subdivision, downsampling, overlap, reordering
-│   │   └── multimaterial.py     # Arterial/venous classification
+│   │   ├── multimaterial.py     # Arterial/venous classification
+│   │   └── calibration.py       # Flow-rate computation + calibration validation
 │   │
 │   ├── io/                      # Input/output
 │   │   ├── reader.py            # Network + inlet/outlet file parsing
@@ -662,22 +663,37 @@ X-CAVATE/
 │   ├── viz/
 │   │   └── plotting.py          # Plotly 3D visualization
 │   │
-│   ├── gui/
-│   │   └── app.py               # Streamlit web interface
-│   │
-│   └── calibration/
-│       └── __init__.py          # Calibration utilities (reuses core modules)
+│   └── gui/
+│       └── app.py               # Streamlit web interface
 │
-├── tests/
-│   ├── conftest.py              # Shared test fixtures (Y-shaped network)
-│   ├── test_preprocessing.py    # Interpolation + boundary detection tests
-│   ├── test_graph.py            # Graph construction + branchpoint tests
-│   ├── test_pathfinding.py      # DFS + collision detection tests
-│   ├── test_gap_closure.py      # Gap closure pipeline tests
-│   └── test_gcode.py            # G-code writer tests
+├── tests/                       # Core regression suite (117 tests)
+│   ├── conftest.py              # Shared fixtures (Y-shaped network)
+│   ├── test_preprocessing.py
+│   ├── test_graph.py
+│   ├── test_pathfinding.py
+│   ├── test_gap_closure.py
+│   ├── test_gcode.py
+│   ├── test_multimaterial.py
+│   ├── test_subdivide_by_material_swap_order.py
+│   ├── test_inlet_outlet_remap.py
+│   ├── test_stress_edge_cases.py
+│   ├── test_plotting.py
+│   ├── test_version.py
+│   └── verification_harness/    # 3-way (v0/v1/v2) end-to-end G-code comparison
+│       ├── pipelines.py         # Pipeline registry + case discovery
+│       ├── run_verification.py  # Orchestrator (discover -> run -> diff -> report)
+│       ├── compare.py, parse_gcode.py, report.py, known_deltas.py, synth_io.py
+│       ├── collect_artifacts.py, generate_final_report.py
+│       ├── v0_runner.py, v1_runner.py   # in-memory patches for the legacy scripts
+│       ├── legacy_scripts/      # vendored xcavate_Science.py (v0), xcavate_11_30_25.py (v1)
+│       ├── final_report/        # generated comparison report (summary + per-case gcode)
+│       └── test_*.py            # harness unit tests
+│
+├── data/
+│   └── verification/            # Seven real vascular networks used by the harness
 │
 ├── inputs/
-│   ├── custom/                  # Custom G-code templates (12 .txt files)
+│   ├── custom/                  # Custom G-code templates (13 .txt files)
 │   │   ├── header_code.txt
 │   │   ├── start_extrusion_code.txt
 │   │   ├── stop_extrusion_code.txt
@@ -689,9 +705,11 @@ X-CAVATE/
 │   │   ├── active_pressure_printhead2.txt
 │   │   ├── rest_pressure_printhead1.txt
 │   │   ├── rest_pressure_printhead2.txt
-│   │   └── dwell_code.txt
+│   │   ├── dwell_start.txt
+│   │   └── dwell_end.txt
 │   └── extension/               # Gap extension files (optional)
 │
+├── docs/                        # User guide + refactoring report (LaTeX + PDF)
 ├── pyproject.toml               # Package metadata and dependencies
 ├── environment.yml              # Conda environment (xcavate-gui)
 ├── Dockerfile                   # Docker container for GUI deployment
