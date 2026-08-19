@@ -742,6 +742,60 @@ class TestPostprocessing:
         assert result[1] == [2]
         assert result[2] == [1]
 
+    def test_reorder_stays_bottom_up(self):
+        """Reordering must not schedule a pass above one still unprinted below it.
+
+        Two vertical columns. Travel-only greedy finishes the first column at
+        its top, then jumps to the top of the second and works downwards,
+        ending at the bath floor and driving the nozzle through everything
+        already extruded.
+        """
+        pts = []
+
+        def add(x, y, z):
+            pts.append([x, y, z])
+            return len(pts) - 1
+
+        cols = {}
+        for tag, x in (("A", 0.0), ("B", 8.0)):
+            cols[tag + "_deep"] = [add(x, 0.0, 0.0), add(x, 0.0, 0.2)]
+            cols[tag + "_mid"] = [add(x, 0.0, 1.0), add(x, 0.0, 2.0)]
+            cols[tag + "_hi"] = [add(x, 0.0, 4.5), add(x, 0.0, 5.0)]
+
+        points = np.array(pts, dtype=float)
+        names = list(cols)
+        passes = {i: cols[n] for i, n in enumerate(names)}
+        nozzle_radius = 0.5
+
+        result = reorder_passes_nearest_neighbor(
+            passes, points, nozzle_radius=nozzle_radius,
+        )
+        by_nodes = {tuple(v): k for k, v in passes.items()}
+        order = [by_nodes[tuple(result[i])] for i in sorted(result)]
+        pos = {k: i for i, k in enumerate(order)}
+
+        for tag in ("A", "B"):
+            deep = names.index(tag + "_deep")
+            mid = names.index(tag + "_mid")
+            hi = names.index(tag + "_hi")
+            assert pos[deep] < pos[mid] < pos[hi], (
+                f"column {tag} printed out of order: "
+                f"{[names[k] for k in order]}"
+            )
+
+    def test_reorder_without_nozzle_radius_is_travel_only(self):
+        """Passing no radius keeps the original travel-only behaviour."""
+        passes = {0: [0], 1: [1], 2: [2]}
+        points = np.array([
+            [0.0, 0.0, 0.0],
+            [100.0, 0.0, 0.0],
+            [0.1, 0.0, 0.0],
+        ])
+        result = reorder_passes_nearest_neighbor(passes, points)
+        assert result[0] == [0]
+        assert result[1] == [2]
+        assert result[2] == [1]
+
     def test_empty_passes(self):
         """Empty pass dict: should not crash."""
         result = add_overlap({}, num_overlap=3)

@@ -205,7 +205,9 @@ def run_xcavate(
 
     # Reorder for minimal travel (optional; off by default for equivalence)
     if config.reorder_passes:
-        print_passes_sm = reorder_passes_nearest_neighbor(print_passes_sm, points_interp)
+        print_passes_sm = reorder_passes_nearest_neighbor(
+            print_passes_sm, points_interp, config.nozzle_radius,
+        )
 
     # Speed computation
     speed_map_sm = None
