@@ -48,6 +48,7 @@ from xcavate.core.pathfinding import (
 from xcavate.core.postprocessing import (
     add_overlap,
     downsample_passes,
+    enforce_collision_safe_order,
     reorder_passes_nearest_neighbor,
     subdivide_passes,
 )
@@ -739,6 +740,122 @@ class TestPostprocessing:
         # Pass 0 stays first
         assert result[0] == [0]
         # Pass 2 (closest) should be second
+        assert result[1] == [2]
+        assert result[2] == [1]
+
+    def _collision_violations(self, print_passes, points, nozzle_radius):
+        """Count nodes printed while unprinted material still sits below them."""
+        pos = {}
+        i = 0
+        for k in sorted(print_passes):
+            for n in print_passes[k]:
+                pos.setdefault(n, i)
+                i += 1
+        bad = 0
+        for n in pos:
+            for m in pos:
+                if m == n:
+                    continue
+                xy = np.linalg.norm(points[m, :2] - points[n, :2])
+                if xy < nozzle_radius and points[m, 2] < points[n, 2] and pos[m] > pos[n]:
+                    bad += 1
+        return bad
+
+    def test_collision_safe_order_fixes_top_down_sequence(self):
+        """A pass printed above an unprinted one below it must be re-sequenced."""
+        points = np.array([
+            [0.0, 0.0, 3.0], [0.0, 0.0, 4.0], [0.0, 0.0, 5.0],
+            [0.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 0.0, 2.0],
+        ])
+        passes = {0: [0, 1, 2], 1: [3, 4, 5]}
+        graph = {0: [0, 1, 5], 1: [1, 0, 2], 2: [2, 1],
+                 3: [3, 4], 4: [4, 3, 5], 5: [5, 4, 0]}
+
+        assert self._collision_violations(passes, points, 0.5) > 0
+        result = enforce_collision_safe_order(passes, points, 0.5, graph)
+        assert self._collision_violations(result, points, 0.5) == 0
+        assert result[0] == [3, 4, 5]
+
+    def test_collision_safe_order_splits_mutually_blocking_passes(self):
+        """Mutually blocking passes cannot be reordered — they must be cut."""
+        points = np.array([
+            [0.0, 0.0, 0.0], [0.0, 0.0, 3.0],
+            [0.0, 0.0, 1.0], [0.0, 0.0, 4.0],
+        ])
+        passes = {0: [0, 1], 1: [2, 3]}
+
+        assert self._collision_violations(passes, points, 0.5) > 0
+        result = enforce_collision_safe_order(passes, points, 0.5)
+        assert self._collision_violations(result, points, 0.5) == 0
+        assert len(result) > len(passes), "must split, not merely reorder"
+
+    def test_collision_safe_order_preserves_every_node(self):
+        """Splitting must never drop or invent a node."""
+        rng = np.random.default_rng(0)
+        points = rng.random((60, 3)) * np.array([2.0, 2.0, 5.0])
+        passes = {i: list(range(i * 10, i * 10 + 10)) for i in range(6)}
+
+        result = enforce_collision_safe_order(passes, points, 0.4)
+        assert {n for v in passes.values() for n in v} == {n for v in result.values() for n in v}
+        assert self._collision_violations(result, points, 0.4) == 0
+
+    def test_collision_safe_order_noop_without_nozzle_radius(self):
+        """A zero radius means no shadow, so nothing should change."""
+        points = np.array([[0.0, 0.0, 3.0], [0.0, 0.0, 0.0]])
+        passes = {0: [0], 1: [1]}
+        assert enforce_collision_safe_order(passes, points, 0.0) == passes
+
+    def test_reorder_stays_bottom_up(self):
+        """Reordering must not schedule a pass above one still unprinted below it.
+
+        Two vertical columns. Travel-only greedy finishes the first column at
+        its top, then jumps to the top of the second and works downwards,
+        ending at the bath floor and driving the nozzle through everything
+        already extruded.
+        """
+        pts = []
+
+        def add(x, y, z):
+            pts.append([x, y, z])
+            return len(pts) - 1
+
+        cols = {}
+        for tag, x in (("A", 0.0), ("B", 8.0)):
+            cols[tag + "_deep"] = [add(x, 0.0, 0.0), add(x, 0.0, 0.2)]
+            cols[tag + "_mid"] = [add(x, 0.0, 1.0), add(x, 0.0, 2.0)]
+            cols[tag + "_hi"] = [add(x, 0.0, 4.5), add(x, 0.0, 5.0)]
+
+        points = np.array(pts, dtype=float)
+        names = list(cols)
+        passes = {i: cols[n] for i, n in enumerate(names)}
+        nozzle_radius = 0.5
+
+        result = reorder_passes_nearest_neighbor(
+            passes, points, nozzle_radius=nozzle_radius,
+        )
+        by_nodes = {tuple(v): k for k, v in passes.items()}
+        order = [by_nodes[tuple(result[i])] for i in sorted(result)]
+        pos = {k: i for i, k in enumerate(order)}
+
+        for tag in ("A", "B"):
+            deep = names.index(tag + "_deep")
+            mid = names.index(tag + "_mid")
+            hi = names.index(tag + "_hi")
+            assert pos[deep] < pos[mid] < pos[hi], (
+                f"column {tag} printed out of order: "
+                f"{[names[k] for k in order]}"
+            )
+
+    def test_reorder_without_nozzle_radius_is_travel_only(self):
+        """Passing no radius keeps the original travel-only behaviour."""
+        passes = {0: [0], 1: [1], 2: [2]}
+        points = np.array([
+            [0.0, 0.0, 0.0],
+            [100.0, 0.0, 0.0],
+            [0.1, 0.0, 0.0],
+        ])
+        result = reorder_passes_nearest_neighbor(passes, points)
+        assert result[0] == [0]
         assert result[1] == [2]
         assert result[2] == [1]
 
