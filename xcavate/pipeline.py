@@ -69,6 +69,7 @@ def run_xcavate(
         downsample_passes,
         add_overlap,
         reorder_passes_nearest_neighbor,
+        enforce_collision_safe_order,
     )
     from xcavate.core.gap_closure import run_full_gap_closure_pipeline
     from xcavate.core.multimaterial import (
@@ -209,6 +210,14 @@ def run_xcavate(
             print_passes_sm, points_interp, config.nozzle_radius,
         )
 
+    # Cut passes wherever the order would drive the nozzle down through ink
+    # already on the bed.  Ordering alone cannot prevent this: a mutually
+    # blocking pair is only resolvable by cutting.
+    print_passes_sm = enforce_collision_safe_order(
+        print_passes_sm, points_interp, config.nozzle_radius, graph,
+        config.tolerance, config.tolerance_flag,
+    )
+
     # Speed computation
     speed_map_sm = None
     if config.speed_calc:
@@ -257,6 +266,11 @@ def run_xcavate(
             print_passes_mm = add_overlap(
                 print_passes_mm, config.num_overlap,
             )
+
+        print_passes_mm = enforce_collision_safe_order(
+            print_passes_mm, points_interp, config.nozzle_radius, graph,
+            config.tolerance, config.tolerance_flag,
+        )
 
         # Re-classify after subdivision
         material_map = classify_passes_by_material(
