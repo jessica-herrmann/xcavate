@@ -356,7 +356,15 @@ def enforce_collision_safe_order(
     cursor = points[result[out_idx - 1][-1], :3] if out_idx else None
     while pending:
         if not ready:
-            break  # unreachable while the Z-DAG stays acyclic
+            # Unreachable: take the shallowest pending node; every blocker is
+            # strictly below it and is itself either emitted or pending, so a
+            # pending node with no blockers left always exists. Raise rather
+            # than break — falling through here would drop these nodes and
+            # emit a print that is silently missing vessel.
+            raise RuntimeError(
+                f"collision-safe ordering stalled with {len(pending)} nodes "
+                f"unplaced; the node-level Z-DAG should make this impossible"
+            )
         if cursor is None:
             start = min(ready, key=lambda n: float(z[n]))
         else:

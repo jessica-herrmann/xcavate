@@ -126,6 +126,10 @@ def build_parser() -> argparse.ArgumentParser:
                     help="Pathfinding algorithm (default: dfs)")
     p.add_argument("--output_dir", type=str, default="outputs",
                     help="Output directory (default: outputs)")
+    p.add_argument("--collision_safe_order", type=int, default=0,
+                    help="Split passes so the nozzle never descends through printed ink "
+                         "(1=yes, 0=no). Off by default: it changes the emitted G-code "
+                         "relative to the published protocol.")
     p.add_argument("--reorder_passes", type=int, default=0,
                     help="Reorder passes for minimal nozzle travel (1=yes, 0=no)")
     p.add_argument("--gap_extension_size", type=float, default=0.0,
@@ -160,6 +164,7 @@ def args_to_config(args: argparse.Namespace) -> XcavateConfig:
         automation1=bool(args.automation1),
         algorithm=PathfindingAlgorithm(args.algorithm),
         reorder_passes=bool(args.reorder_passes),
+        collision_safe_order=bool(args.collision_safe_order),
         gap_extension_size=args.gap_extension_size,
         convert_factor=args.convert_factor,
         scale_factor=args.scale_factor,

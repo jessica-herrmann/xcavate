@@ -761,6 +761,20 @@ class TestPostprocessing:
                     bad += 1
         return bad
 
+    def test_collision_safe_order_is_off_by_default(self):
+        """The published protocol's G-code must stay the default output.
+
+        Splitting passes changes the emitted G-code, so it has to be opted
+        into rather than inherited by anyone re-running the protocol.
+        """
+        from xcavate.config import XcavateConfig
+
+        cfg = XcavateConfig(
+            network_file=Path("n.txt"), inletoutlet_file=Path("io.txt"),
+            nozzle_diameter=0.25, container_height=50.0, num_decimals=3,
+        )
+        assert cfg.collision_safe_order is False
+
     def test_collision_safe_order_fixes_top_down_sequence(self):
         """A pass printed above an unprinted one below it must be re-sequenced."""
         points = np.array([
