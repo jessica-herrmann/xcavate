@@ -270,6 +270,12 @@ with st.sidebar:
                  "be connected as a branch. A good starting value is 2x your nozzle diameter. "
                  "Use 0 to disable (all endpoints connect, which may create unwanted branches).",
         )
+        collision_safe_order = st.toggle(
+            "Collision-safe pass order", value=False,
+            help="Split passes wherever the nozzle would otherwise descend through ink "
+                 "already on the bed. Off by default because it changes the emitted "
+                 "G-code relative to the published protocol.",
+        )
         reorder_passes = st.toggle(
             "Reorder passes for minimal travel", value=False,
             help="Reorder print passes using nearest-neighbor to minimize nozzle travel distance between passes. "
@@ -641,6 +647,7 @@ def _build_config(
         close_mm=close_mm,
         branchpoint_distance_threshold=branchpoint_distance_threshold,
         reorder_passes=reorder_passes,
+        collision_safe_order=collision_safe_order,
         gap_extension_size=gap_extension_size,
         output_dir=output_dir,
     )

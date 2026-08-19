@@ -59,6 +59,9 @@ class XcavateConfig:
     automation1: bool = True             # Automation1 Aerotech program wrapper
     algorithm: PathfindingAlgorithm = PathfindingAlgorithm.DFS
     reorder_passes: bool = False
+    # Off by default: enabling it splits passes, which changes the emitted
+    # G-code relative to the published protocol.
+    collision_safe_order: bool = False
 
     # --- Geometry ---
     tolerance: float = 0.0
