@@ -1,16 +1,20 @@
-MIT License
+Modified MIT License
 
-Copyright (c) 2026 Stanford University
+Copyright (c) 2026 Jessica Herrmann, Stanford University
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+in the Software without academic restriction, including without limitation the rights
+to use, copy, modify, merge, publish, or distribute the software for academic purposes, 
+and to permit persons to whom the Software is furnished to do so, subject to the 
+following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
+
+The software may NOT be used for commercial purposes, including sublicensing 
+and/or selling copies of the Software or modified Software, without explicit
+written permission from the copyright holder.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
